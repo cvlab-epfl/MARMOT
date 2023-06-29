@@ -42,9 +42,9 @@ This command will create a Docker image named `container:latest` and log the bui
 
 ### Running the Docker Container
 
-To run the Docker container, use the following command:
+To run the Docker container, use the following command from the root directory:
 
-`docker run --gpus all -v $/data$:/root -p 8080:8080 -p 5000:5000 -it container /bin/bash`
+`docker run --gpus all -v .:/root -p 8080:8080 -p 5000:5000 -it container /bin/bash`
 
 Once the container is running, you can interact with it using a Bash shell. Any changes you make to the container's file system will be lost when the container is stopped.
 

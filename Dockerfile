@@ -53,9 +53,6 @@ RUN pip install --upgrade pip
 
 WORKDIR /
 
-COPY requirements.txt  .
-RUN pip install -r requirements.txt
-
 RUN git clone --recursive https://github.com/mapillary/OpenSfM.git /OpenSfM
 
 # set up OpenSfM
@@ -92,11 +89,16 @@ RUN ./cmake_and_build.sh
 
 
 
-WORKDIR /
+
 
 RUN git clone https://github.com/cvlab-epfl/MVFlow.git /MVFlow
 
 ENV HOME /
+
+WORKDIR /
+
+COPY requirements.txt  .
+RUN pip install --no-cache-dir -r requirements.txt 
 
 WORKDIR /root
 

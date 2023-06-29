@@ -153,37 +153,20 @@ cython_debug/
 
 
 # Exclude folders with footage
-# */data/footage
-# */data/opensfm
-# */data/verification
-# **/data/0-calibration/opensfm/exif
-# **/data/0-calibration/opensfm/features
-# **/data/0-calibration/opensfm/images
-# **/data/0-calibration/opensfm/reports
-# **/data/0-calibration/opensfm/undistorted
-# **/data/0-calibration/opensfm/depthmaps
-# **/data/0-calibration/opensfm/matches
+data/**
+scenes/**
 
-# Data
-*.png
-# *.jpg
-*.MP4
-*.MOV
-*.mov
+# Include config files
+!data/2-training/train_config.yaml
+
+# Annotation Databases
+pedestriantag
 
 # Mac
 **.DS_store
+._**
 
 # ssh
 .ssh/
-# data/1-annotation/**
-# wildtrack_scene/**
-# data/0-calibration/**
-# data/2-training/**
-scenes/**
-# data/raw_data/**
-._**
-# data/raw_data_link/**
-data/**
 **.pyc
-pedestriantag
+/raw_data/**

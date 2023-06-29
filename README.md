@@ -1,10 +1,18 @@
-# Multi-Aspect Reconstruction and Multi-Object Tracking
+# Multi-Aspect Reconstruction and Multi-Object Tracking 
 
 This repository contains all the steps necessary to tackle the multi-view multi-people tracking problem. The pipeline consists of 5 steps: calibration, annotation, training, inference and tracking.
 
-![Image showing the validation of the training.](images/full_pipeline.png)
-<!-- <img src="images/full_pipeline.png" alt="drawing" width="100%" height="200"/> -->
+<p align="center">
+<img src="images/full_pipeline.jpg" alt="MARMOT Pipeline" width="100%"/>
+</p>
+
 ## System setup
+
+### Pulling the Repository
+
+Due to the included submodule please use: `git clone --recurse-submodules https://github.com/cvlab-epfl/MARMOT.git`
+
+Alternatively, clone and: `git submodule update --init --recursive`
 
 More information about system setup can be found in the [setup Readme](doc/!-setup.md).
 

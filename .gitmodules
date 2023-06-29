@@ -1,3 +1,4 @@
 [submodule "code/1-annotation/multicam-gt"]
 	path = code/1-annotation/multicam-gt
-	url = https://github.com/M-Eng/multicam-gt.git
+	url = https://github.com/cvlab-epfl/multicam-gt.git
+	branch = MARMOT
