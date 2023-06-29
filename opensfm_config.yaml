@@ -1,0 +1,7 @@
+processes: 8
+
+feature_type: SIFT
+matcher_type: BRUTEFORCE
+
+sift_peak_threshold: 0.1
+sift_edge_threshold: 10

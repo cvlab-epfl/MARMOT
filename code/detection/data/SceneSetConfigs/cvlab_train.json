@@ -1,0 +1,14 @@
+{
+    "data_root": "/cvlabdata2/home/sarno/martin_project/SFM/DATASET",
+    "frame_size": [
+        1080,
+        1920
+    ],
+    "world_origin_shift": [ 
+        250,
+        850
+    ],
+    "grounplane_scale": 0.05,
+    "fps": 2,
+    "anns_root": ""
+}
