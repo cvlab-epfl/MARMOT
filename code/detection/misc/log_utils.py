@@ -87,7 +87,7 @@ def batch_logging(epoch, batch_index, nb_batch, stats_meter, loss_to_print=[], m
     
     tab = '\t'
     #Epoch and step logging
-    str_step_lgd = "[Epoch][Bacth/Total]"
+    str_step_lgd = "[Epoch][Batch/Total]"
     str_step = f"[{epoch}][{batch_index}/{nb_batch}]"
 
     #Time logging
@@ -142,7 +142,7 @@ def batch_inf_logging(epoch, batch_index, nb_batch, stats_meter):
     
     tab = '\t'
     #Epoch and step logging
-    str_step_lgd = "[Epoch][Bacth/Total]"
+    str_step_lgd = "[Epoch][Batch/Total]"
     str_step = f"[{epoch}][{batch_index}/{nb_batch}]"
 
     #Time logging

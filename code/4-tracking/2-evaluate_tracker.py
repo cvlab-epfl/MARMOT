@@ -1,3 +1,10 @@
+"""
+Look into adding nb_gt into the compute mot metric function
+look at metric.py for nb_gt calculation.
+
+"""
+
+
 import sys
 
 if "../" not in sys.path:

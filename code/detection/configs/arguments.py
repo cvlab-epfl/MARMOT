@@ -49,7 +49,7 @@ parser_data.add_argument("-shft", "--shuffle_train", dest="shuffle_train", actio
 parser_data.add_argument("-bs", "--batch_size", dest="batch_size", type=int, default=1,  help="The size of the batches")
 parser_data.add_argument("-dfps", "--desired_fps", dest="desired_fps", type=int, default=-1,  help="The desired framerate use to load the data, must be lower than the original framerate and a factor of it, if set to -1 it will default to the original framerate")
 parser_data.add_argument("-cs", "--crop_size", dest="crop_size", nargs="+", type=int, default=[360, 640], help="Expect pairs of integer coresponding to the size to resize the image before processing") #[480, 832]
-parser_data.add_argument("-nw", "--num_workers", dest="num_workers", type=int, default=10, help="Number of work to use in the train and val dataloader")
+parser_data.add_argument("-nw", "--num_workers", dest="num_workers", type=int, default=2, help="Number of work to use in the train and val dataloader")
 parser_data.add_argument("-mth", "--metric_threshold", dest="metric_threshold", type=float, default=2.5, help="Distance in groundplane pixel where detection are considered positive when computing metrics")
 parser_data.add_argument("-aug", "--aug_train", dest="aug_train", action="store_true", default=False, help="Add various data augmentation to input frames during training")
 parser_data.add_argument("-fi", "--frame_interval", dest="frame_interval", type=int, default=3, help="Interval between frame when sampling a video to make frame triplets")
