@@ -9,7 +9,9 @@ import numpy as np
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 
 from utils.log_utils import log
+from torchvision import transforms
 from typing import Tuple, Optional, List, Dict, Union, Any
+
 
 import torch
 
@@ -28,9 +30,8 @@ def is_in_frame(point:Tuple[float, float], frame_size: Tuple[int, int]) -> bool:
     
     return is_in_top_left and is_in_bottom_right
 
-
-def visualize_gt_cv2(input_img: np.ndarray, gt_points: Optional[List] = None, 
-                     roi: Optional[np.ndarray] = None) -> np.ndarray:
+def visualize_gt_cv2(input_img, gt_points=None, roi=None, pred_points=None):
+    input_img = np.array(input_img, dtype = np.uint8)
     """
     Visualizes ground truth points and/or a region of interest (ROI) 
     on an input image.
@@ -64,14 +65,16 @@ def visualize_gt_cv2(input_img: np.ndarray, gt_points: Optional[List] = None,
         for point in gt_points:
             # Check if the point is within the image frame
             if is_in_frame(point, out_image.shape[:2][::-1]):
-                out_image = cv2.drawMarker(out_image, 
-                                           (int(point[0]), int(point[1])), 
-                                           [0, 190, 0], 
-                                           cv2.MARKER_SQUARE, 
-                                           markerSize=6, 
-                                           thickness=3)
+                out_image = cv2.drawMarker(out_image, (int(point[0]), int(point[1])), [0,190,0], cv2.MARKER_SQUARE, markerSize=6, thickness=3) #MarkerType[, markerSize[, thickness[, line_type]]]]	)
+
+    if pred_points is not None:
+        # log.debug(gt_points)
+        # log.debug("#######")
+        for point in pred_points:
+            if is_in_frame(point, out_image.shape[:2][::-1]):
+                out_image = cv2.drawMarker(out_image, (int(point[0]), int(point[1])), [190,0,0], cv2.MARKER_CROSS, markerSize=6, thickness=3) #MarkerType[, markerSize[, thickness[, line_type]]]]	)
     
-    # Return the output image
+
     return out_image
 
 def visualize_hm_det(epoch_result_dicts: Dict, det: str, conf: Dict) -> List:
@@ -1086,21 +1089,7 @@ def save_video_avi(frames: List[np.ndarray], path: str,
     out.release()
 
 
-
-
-
-def visualize_density(density_pred: np.ndarray, 
-                      grid_size: int = 4) -> np.ndarray:
-    """
-    Visualize the density map as an image.
-
-    Parameters:
-    - density_pred: A NumPy array representing the density map.
-    - grid_size: The size of the grid cells in pixels (default is 4).
-
-    Returns:
-    - A NumPy array representing the density map as an image.
-    """
+def visualize_density(input_img, density_pred, roi=None):
       
     my_dpi=50
     fig = plt.figure(figsize=(float(input_img.shape[1])

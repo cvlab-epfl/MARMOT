@@ -301,7 +301,7 @@ def find_nearest_point_distance(point, point_list):
     return dist
 
 
-def compute_mot_metric(gt_df, pred_df, metric_threshold, nb_gt):
+def compute_mot_metric(gt_df, pred_df, metric_threshold, nb_gt=None):
 
     if gt_df.size == 0:
         log.spam("Trying to compute tracking metric on an empty sequence (gt size is 0)")
@@ -310,13 +310,15 @@ def compute_mot_metric(gt_df, pred_df, metric_threshold, nb_gt):
     acc = mm.utils.compare_to_groundtruth(gt_df, pred_df, 'euc', distfields=['X', 'Y'], distth=metric_threshold)
     
     #library doesn't implement moda computation, compute it manually form accumulator
-    moda = compute_moda(acc, nb_gt)
+    
     mh = mm.metrics.create()
     summary = mh.compute(acc, metrics=mm.metrics.motchallenge_metrics, name='acc')
 
     # log.debug(summary)
     metrics = dict(zip(summary.keys(), summary.values[0]))
-    metrics["moda"] = moda
+    if nb_gt is not None:
+        moda = compute_moda(acc, nb_gt)
+        metrics["moda"] = moda
     
     return metrics
 

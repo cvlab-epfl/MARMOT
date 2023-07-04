@@ -1,10 +1,3 @@
-"""
-Look into adding nb_gt into the compute mot metric function
-look at metric.py for nb_gt calculation.
-
-"""
-
-
 import sys
 
 if "../" not in sys.path:
@@ -39,7 +32,8 @@ def convert_ann_to_tracks(gt_anns_list):
     track_as_list = []
 
     for gt_ann in gt_anns_list:
-         track_as_list.append({'FrameId':gt_ann.frame_id, 'Id':int(gt_ann.person_id), 'X':int(gt_ann.feet[0]), 'Y':int(gt_ann.feet[1])})
+        # track_as_list.append({'FrameId':gt_ann.frame_id, 'Id':int(gt_ann.person_id), 'X':int(gt_ann.feet[0]), 'Y':int(gt_ann.feet[1])})
+        track_as_list.append({'FrameId':gt_ann.frame, 'Id':int(gt_ann.id), 'X':int(gt_ann.feet[0]), 'Y':int(gt_ann.feet[1])})
 
     return track_as_list
 
