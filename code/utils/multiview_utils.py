@@ -742,12 +742,12 @@ class Camera(BaseCamera):
 
         return self.calibration
     
-    def get_ground_plane_homography(
-            self, 
-            input_img_size:Tuple[int, int] = (1080, 1920),
-            output_img_size:Tuple[int, int] = (1080, 1920),
-            bounding_box:Tuple[Tuple, Tuple, float] = ((0., 0.), (50., 50.), 0),
-            padding_percent:float=0.
+    
+    def get_ground_plane_homography(self, 
+            input_img_size = (1080, 1920),
+            output_img_size = (1080, 1920),
+            bounding_box = ((0., 0.), (50., 50.), 0),
+            padding_percent=0.
             ) -> np.ndarray:
         """
         Computes the homography that projects ground plane onto image plane.
@@ -767,66 +767,68 @@ class Camera(BaseCamera):
         H(np.ndarray): homography matrix
         """
 
-        if padding_percent > 0:
-            self.padding_percent = padding_percent
-        # make sure that aspect ratios of output image and bounding box are the same
-        if output_img_size[1]/output_img_size[0] != bounding_box[1][0]/bounding_box[1][1]:
-            log.warning("Aspect ratios of output image and bounding box are not the same."
-                        f"Output image aspect ratio: {output_img_size[1]/output_img_size[0]}, "
-                        f"bounding box aspect ratio: {bounding_box[1][0]/bounding_box[1][1]}")
-
-
-        # Get the camera calibration
-        K = self.calibration.K
-        R = self.calibration.R
-        T = self.calibration.T
-
         # Create a new rotation-translation matrix RT by combining 
         # the rotation matrix R and translation vector T
         RT = np.zeros((3,3))
-        RT[:,:2] = R[:,:2]
-        RT[:,2] = T.squeeze()
+        RT[:,:2] = self.calibration.R[:,:2]
+        RT[:,2] = self.calibration.T.squeeze()
 
-        # Scale the bounding box by the image size
-        longest_side = max(output_img_size)
-        scale = longest_side / max(bounding_box[1][0]*(1 + self.padding_percent / 100), bounding_box[1][1]*(1 + self.padding_percent / 100))
-
-        # Output image size (width, height) in pixels 
-        # derived from the bounding box
-
-        # Compute the translation to center the output image bbox center
-        cx, cy = bounding_box[0]
-        tx = ((output_img_size[1] - 1)/2) - cx*scale
-        ty = ((output_img_size[0] -1)/2) - cy*scale
+        # Scale the bounding box by the output image size
+        scale = max(output_img_size) / max(bounding_box[1])
         
-        # Create Ki
-        Ki = np.eye(3)
-        Ki[0,0] = scale
-        Ki[1,1] = scale
-        Ki[0,2] = tx
-        Ki[1,2] = ty
-        
-        # convert rotation to radians
-        rotation = np.radians(bounding_box[2])
+        bounding_box = ((bounding_box[0][0]*scale, bounding_box[0][1]*scale), 
+                        (bounding_box[1][0]*scale, bounding_box[1][1]*scale), 
+                        bounding_box[2])
+
+
+        # if longest sides of output image and bounding box don't align, rotate the bounding box
+        if output_img_size[1] > output_img_size[0] and bounding_box[1][1] > bounding_box[1][0]:
+            print("Rotating bounding box counter clockwise 90 degrees")
+            bounding_box = ((bounding_box[0][1], bounding_box[0][0]), 
+                            (bounding_box[1][1], bounding_box[1][0]), 
+                            bounding_box[2] + 90)
+
+        if output_img_size[0] > output_img_size[1] and bounding_box[1][0] > bounding_box[1][1]:
+            print("Rotating bounding box clockwise 90 degrees")
+            bounding_box = ((bounding_box[0][1], bounding_box[0][0]), 
+                            (bounding_box[1][1], bounding_box[1][0]), 
+                            bounding_box[2] - 90)
+
+
         # Rotate by rotation around the z axis
-        rot = np.array([[np.cos(rotation), -np.sin(rotation), 0], 
-                        [np.sin(rotation), np.cos(rotation), 0], 
-                        [0, 0, 1]])
+        rot = R.from_rotvec(np.radians(bounding_box[2])*np.array([0, 0, 1])).as_matrix()
+
+        # Compute the translation to center the output image bbox center with padding
+        cx, cy = bounding_box[0][1], bounding_box[0][0]
+
+        if padding_percent != 0:
+            padding_x = int(output_img_size[1] / padding_percent / 100)
+            padding_y = int(output_img_size[0] / padding_percent / 100)
+        else:
+            padding_x = 0
+            padding_y = 0
+        tx = int((output_img_size[1]-1) / 2) + cx
+        ty = int((output_img_size[0]-1) / 2) + cy
+
+        # Create Ki with padding
+        Ki = np.eye(3)
+        Ki[0,0] = scale / (1 + padding_percent / 100)
+        Ki[1,1] = scale / (1 + padding_percent / 100)
+        Ki[0,2] = tx + padding_x
+        Ki[1,2] = ty + padding_y
 
         # Create conversion matrix from input_img_size to native size
-        factorx = input_img_size[1] / (K[0,2] * 2)
-        factory = input_img_size[0] / (K[1,2] * 2)
+        factorx = input_img_size[1] / (self.calibration.size[1])
+        factory = input_img_size[0] / (self.calibration.size[0])
 
         # New camera matrix to account for image size
-        K_new = K.copy()
-        K_new[0,0] = K[0,0] * factorx
-        K_new[1,1] = K[1,1] * factory
-        K_new[0,2] = K[0,2] * factorx
-        K_new[1,2] = K[1,2] * factory
+        K_new = self.calibration.K.copy()
+        K_new[0,0] = self.calibration.K[0,0] * factorx
+        K_new[1,1] = self.calibration.K[1,1] * factory
+        K_new[0,2] = self.calibration.K[0,2] * factorx
+        K_new[1,2] = self.calibration.K[1,2] * factory
 
-
-        # Compute the homography that maps the ground plane onto output image
-        H = K_new @ RT @ rot @ np.linalg.inv(Ki)
+        H = K_new @ RT @ rot @ np.linalg.inv(Ki) # 
 
         return H
 
