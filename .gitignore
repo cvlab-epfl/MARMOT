@@ -170,3 +170,5 @@ pedestriantag
 .ssh/
 **.pyc
 /raw_data/**
+data_source/** 
+#raw_data/footage/cam2/Brinno082a-2023-09-20-mer..avi

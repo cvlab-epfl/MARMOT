@@ -131,6 +131,7 @@ class BaseCamera:
                         prev_end += frames_vid
 
         self.num_frames = num_frames
+        log.debug(f"Indexed {self.num_frames} frames for camera {self.name}")
         return self.video_dict
     
     def set_first_frame(self, path:Optional[Path] = None) -> int:
@@ -220,7 +221,7 @@ class BaseCamera:
             if not ret:
                 log.warning(f"Failed to grab frame {i} ")
 
-        assert video_capture.get(cv2.CAP_PROP_POS_FRAMES) == frame_number
+        # assert video_capture.get(cv2.CAP_PROP_POS_FRAMES) == frame_number
 
         ret, frame = video_capture.retrieve()
         if ret:

@@ -3,7 +3,7 @@
   --main:
      --data_root: "/root/data" # "/Users/sarno/Documents/GitHub/Pomelo/data" #"/root/data"
      --code_root: "/root/code" # "/Users/sarno/Documents/GitHub/Pomelo/code" #"/root/code"
-     --data: "/root"
+     --data: "/root/data_source"
 
   --calibration:
    #   --focal_length: "507" # tag to be added to metadata
