@@ -13,7 +13,7 @@ import sys
 
 from pathlib import Path
 from collections import defaultdict, Counter, namedtuple
-from typing import List, Dict, Tuple, Union, Optional
+from typing import Any, List, Dict, Tuple, Union, Optional
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 from skspatial.objects import Vector, Line, Plane, Point
@@ -133,6 +133,12 @@ class BaseCamera:
         self.num_frames = num_frames
         log.debug(f"Indexed {self.num_frames} frames for camera {self.name}")
         return self.video_dict
+    
+    def __len__(self, *args: Any, **kwds: Any) -> Any:
+        """
+        Returns the number of frames in the camera.
+        """
+        return self.num_frames
     
     def set_first_frame(self, path:Optional[Path] = None) -> int:
         """
