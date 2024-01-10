@@ -85,12 +85,13 @@ def main():
             selected_frames = load_json(extrinsics_path / 'selected_frames.json')
         
 
-        for frame_interval in selected_frames:
-            opensfm_data_interval = opensfm_data / frame_interval
-            interval_start = frame_interval['start_time']
-            interval_end = frame_interval['end_time']
+        for interval_name, interval_data in selected_frames.items:
+            opensfm_images_interval = opensfm_images / interval_name
+            opensfm_data_interval = opensfm_data / interval_name
+            interval_start = interval_data['start_time']
+            interval_end = interval_data['end_time']
 
-            for camera_name in frame_interval['cameras']:
+            for camera_name in interval_data['cameras']:
                 camera = Camera(camera_name, newest=False)
                 first_frame = int(skip_percent_frames*(camera.num_frames))
                 last_frame = camera.num_frames - first_frame
@@ -124,7 +125,7 @@ def main():
 
                     for i, frame in enumerate(frames):
                         index = frame_ids[i]
-                        file_path =  opensfm_images / f'{camera.name}_{index}.jpg'              
+                        file_path =  opensfm_images_interval / f'{camera.name}_{index}.jpg'              
                         cv2.imwrite(str(file_path), frame)
                         metadata = pyexif.ExifEditor(file_path)
                         metadata.setTag('Model', camera.name)
@@ -137,13 +138,13 @@ def main():
 
             # Write to file
             log.info("Adding overrides to opensfm data directory...")
-            overrides_filepath = opensfm_data / "camera_models_overrides.json"
+            overrides_filepath = opensfm_data_interval / "camera_models_overrides.json"
 
             write_json(overrides_filepath, camera_models_overrides_dict)
 
             # Run openSfM on the data folder
             osfm_runall = opensfm_repo / 'bin' / 'opensfm_run_all'
-            bash_command = f"bash {osfm_runall} {opensfm_data}"
+            bash_command = f"bash {osfm_runall} {opensfm_data_interval}"
             process = subprocess.Popen(bash_command.split(), stdout=subprocess.PIPE)
 
             # Wait for command to finish and get return code
