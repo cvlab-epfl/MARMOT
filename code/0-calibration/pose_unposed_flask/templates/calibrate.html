@@ -1,0 +1,205 @@
+<script>
+    var cameraId = 1;
+    var cameraId2 = 1;
+    function displayCameras(json_file, containerId) {
+        // Get the cameras container element
+        var camerasContainer = document.getElementById(containerId);
+
+        // Remove any existing children from the cameras container
+        while (camerasContainer.firstChild) {
+            camerasContainer.removeChild(camerasContainer.firstChild);
+        }
+
+        // Create a new select element for the dropdown
+        var select = document.createElement('select');
+        select.className = containerId === 'camerasContainer' ? 'dropdown' : 'dropdown2';
+
+        // Loop through the cameras in the JSON file
+        for (var i = 0; i < json_file.length; i++) {
+            // Create a new option element
+            var option = document.createElement('option');
+
+            // Set the option's value to the camera's ID
+            option.value = json_file[i];
+
+            // Set the option's text to the camera's name
+            option.innerText = json_file[i];
+
+            // Append the new option to the select element
+            select.appendChild(option);
+        }
+
+        // Append the new select element to the cameras container
+        camerasContainer.appendChild(select);
+    }
+
+    fetch('/api/cameras')
+        .then(response => response.json())
+        .then(cameras => {
+            displayCameras(cameras, "camerasContainer");
+        });
+
+    fetch('/api/cameras')
+        .then(response => response.json())
+        .then(cameras => {
+            displayCameras(cameras, "camerasContainer2");
+        });
+
+    document.addEventListener('change', function(event) {
+        console.log(event.target);
+        var element = event.target;
+        while (element) {
+            if (element.classList.contains('dropdown')) {
+                console.log(element.value);
+                // Split the string and get the desired part
+                var parts = element.value.split(" ");
+                if (parts.length > 1) {
+                    var subParts = parts[1].split("m");
+                    if (subParts.length > 1) {
+                        cameraId = subParts[1];
+                        console.log(cameraId);
+                    }
+                }
+                break;
+            }
+            if (element.classList.contains('dropdown2')) {
+                console.log(element.value);
+                // Split the string and get the desired part
+                var parts = element.value.split(" ");
+                if (parts.length > 1) {
+                    var subParts = parts[1].split("m");
+                    if (subParts.length > 1) {
+                        cameraId2 = subParts[1];
+                    }
+                }
+                break;
+            }
+            element = element.parentElement;
+        
+    }
+    });
+
+</script>
+
+<!-- display the dropdown menu with found cameras -->
+<div id="camerasContainer" class="dropdown">
+    <h1 class="title">Select Camera to Pose</h1>
+    <!-- The <select> element with the camera names will be inserted here by the JavaScript code -->
+</div>
+
+<!-- display the dropdown menu with found cameras (posed)-->
+<div id="camerasContainer2" class="dropdown2">
+    <h1 class="title">Select Camera for World Points</h1>
+    <!-- The <select> element with the camera names will be inserted here by the JavaScript code -->
+</div>
+
+<a href="/" class="btn btn-home">Back to Home</a>
+
+<style>
+    .frame {
+        max-width: 100%; /* Limit the width to the width of the parent element */
+        height: auto; /* Keep the aspect ratio */
+    }
+    .camera1 {
+    width: 50%; /* Each container takes up half of the parent container's width */
+    }
+    .camera2 {
+    width: 50%; /* Each container takes up half of the parent container's width */
+    }
+
+    .camera img {
+    width: 100%; /* The image takes up the full width of its container */
+    height: auto; /* The height is adjusted automatically to maintain the aspect ratio */
+}
+
+</style>
+
+
+<script>
+    var frame_id = {"frameContainer":0, "secondFrameContainer":0};
+    function displayFrame(frame, containerId) {
+        console.log(frame_id);
+        // Get the frame container element
+        var frameContainer = document.getElementById(containerId);
+
+        // Create a new image element
+        var img = document.createElement('img');
+
+        // Set the source of the image to the frame data
+        img.src = frame;
+        img.className = "frame";
+
+        // Remove any existing children from the frame container
+        while (frameContainer.firstChild) {
+            frameContainer.removeChild(frameContainer.firstChild);
+        }
+
+        // Append the new image to the frame container
+        frameContainer.appendChild(img);
+        frame_id[containerId] += 1;
+    }
+    fetch('/api/camera/' + 1 + '/frame/' + 0)
+                .then(response => response.blob())
+                .then(blob => {
+                    var url = URL.createObjectURL(blob);
+                    displayFrame(url, "frameContainer");
+                });
+    fetch('/api/camera/' + 1 + '/frame/' + 1)
+                .then(response => response.blob())
+                .then(blob => {
+                    var url = URL.createObjectURL(blob);
+                    displayFrame(url, "secondFrameContainer");
+                });
+
+    document.addEventListener('click', function(event) {
+        element = event.target;
+        console.log(element.parentElement);
+        while (element) {
+            if (element.classList.contains('camera1')) {
+                // if cameraId is not set, then initialize it to 0
+                // if (cameraId === undefined) {
+                //     cameraId = 1;
+                // }
+                console.log(cameraId);
+                fetch('/api/camera/' + cameraId + '/frame/' + frame_id["frameContainer"])
+                    .then(response => response.blob())
+                    .then(blob => {
+                        var url = URL.createObjectURL(blob);
+                        displayFrame(url, "frameContainer");
+                    });
+                    break;
+                }
+
+            if (element.classList.contains('camera2')) {
+                // if cameraId is not set, then initialize it to 0
+                if (cameraId2 === undefined) {
+                    cameraId2 = 1;
+                }
+                fetch('/api/camera/' + cameraId2 + '/frame/' + (frame_id["secondFrameContainer"]))
+                    .then(response => response.blob())
+                    .then(blob => {
+                        var url = URL.createObjectURL(blob);
+                        displayFrame(url, "secondFrameContainer");
+                    });
+                    break;
+                }
+                
+            
+            element = element.parentElement;
+        }
+    });
+</script>
+
+<!-- Parent container -->
+<div style="display: flex;">
+    <!-- display image corresponding to highlighted camera -->
+    <div id="frameContainer" class="camera1">
+        <!-- The <img> element with the frame will be inserted here by the JavaScript code -->
+    </div>
+
+    <!-- display second image -->
+    <div id="secondFrameContainer" class="camera2">
+        <!-- The <img> element with the second frame will be inserted here by the JavaScript code -->
+    </div>
+</div>
+
