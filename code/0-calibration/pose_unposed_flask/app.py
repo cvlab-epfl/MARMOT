@@ -286,8 +286,69 @@ import cv2
 from flask import send_file
 import io
 
-@app.route('/api/camera/<int:camera_id>/frame/<int:frame_id>', methods=['GET'])
-def get_camera_frame(camera_id, frame_id):
+
+def draw_features(img, points, colour = (0, 0, 255)):
+    if colour != (0, 0, 255):
+        point_size = 5
+    else:
+        point_size = 2
+    for point in points:
+        cv2.circle(img, (int(point[0]), int(point[1])), point_size, colour, -1)
+    return img
+
+import pickle
+import gzip
+
+def load_features_and_matches(img_path):
+    features_path = os.path.join(app.config['UPLOAD_FOLDER'], 'features')
+    matches_path = os.path.join(app.config['UPLOAD_FOLDER'], 'matches')
+    img_name = os.path.basename(img_path)
+    features = np.load(os.path.join(features_path, img_name + '.features.npz'))
+
+    with gzip.open(os.path.join(matches_path, img_name + '_matches.pkl.gz'), 'rb') as f:
+        matches = pickle.load(f)
+
+    return features, matches
+
+def denormalized_image_coordinates(
+        norm_coords: np.ndarray, width: int, height: int
+    ) -> np.ndarray:
+        size = max(width, height)
+        p = np.empty((len(norm_coords), 2))
+        # handle the case where only a single point is passed
+        if len(norm_coords.shape) == 1:
+            norm_coords = norm_coords.reshape(1, -1)
+
+        p[:, 0] = norm_coords[:, 0] * size - 0.5 + width / 2.0
+        p[:, 1] = norm_coords[:, 1] * size - 0.5 + height / 2.0
+        return p
+
+
+@app.route('/api/camera/matches/<int:camera_id>/<int:frame_id>/<int:camera_id_2>/<int:frame_id_2>/', methods=['GET'])
+def get_camera_matches(camera_id, frame_id, camera_id_2, frame_id_2):
+    images_dir = os.path.join(app.config['UPLOAD_FOLDER'], 'images')
+    image_names = [name for name in os.listdir(images_dir) if f"cam{camera_id}_" in name]
+    image_names.sort()
+
+    image_names_2 = [name for name in os.listdir(images_dir) if f"cam{camera_id_2}_" in name]
+    image_names_2.sort()
+
+    matches_path = os.path.join(app.config['UPLOAD_FOLDER'], 'matches')
+
+    with gzip.open(os.path.join(matches_path, image_names[frame_id % len(image_names)] + '_matches.pkl.gz'), 'rb') as f:
+        matches = pickle.load(f)
+
+    
+    match_img = matches[image_names_2[frame_id_2 % len(image_names_2)]] if image_names_2[frame_id_2 % len(image_names_2)] in matches else None
+
+    if match_img is None:
+        return None
+
+    return match_img if len(match_img) > 0 else None
+        
+
+@app.route('/api/camera/<int:camera_id>/frame/<int:frame_id>/camera/<int:camera_id_2>/frame/<int:frame_id_2>/', methods=['GET'])
+def get_camera_frame(camera_id, frame_id, camera_id_2, frame_id_2, highlight_matches=True):
     # This is a placeholder. Replace with your actual logic.
     images_dir = os.path.join(app.config['UPLOAD_FOLDER'], 'images')
     image_names = [name for name in os.listdir(images_dir) if f"cam{camera_id}_" in name]
@@ -295,8 +356,62 @@ def get_camera_frame(camera_id, frame_id):
 
     img = cv2.imread(os.path.join(images_dir, image_names[frame_id % len(image_names)]))
 
+    features, matches = load_features_and_matches(image_names[frame_id % len(image_names)])
+
+    image_names_2 = [name for name in os.listdir(images_dir) if f"cam{camera_id_2}_" in name]
+    image_names_2.sort()
+    features_2, _ = load_features_and_matches(image_names_2[frame_id_2 % len(image_names_2)])
+
+    img_2 = cv2.imread(os.path.join(images_dir, image_names_2[frame_id_2 % len(image_names_2)]))
+
+    # if image shapes are different, resize
+    if img.shape[0] != img_2.shape[0] or img.shape[1] != img_2.shape[1]:
+        img = cv2.resize(img, (img_2.shape[1], img_2.shape[0]))
+
+    img = draw_features(img, denormalized_image_coordinates(features['points'], img.shape[1], img.shape[0]))
+
+    
+
+    features, matches = load_features_and_matches(image_names[frame_id % len(image_names)])
+
+    
+
+    img_2 = draw_features(img_2, denormalized_image_coordinates(features_2['points'], img_2.shape[1], img_2.shape[0]))
+
+    img = draw_features(img, denormalized_image_coordinates(features['points'], img.shape[1], img.shape[0]))
+
+    if highlight_matches: 
+        matches = get_camera_matches(camera_id, frame_id, camera_id_2, frame_id_2)
+        if matches is not None:
+            # print(matches)
+            img = draw_features(img, denormalized_image_coordinates(features['points'][matches[:,0]], img.shape[1], img.shape[0]), colour = (0, 255, 0))
+            img_2 = draw_features(img_2, denormalized_image_coordinates(features_2['points'][matches[:,1]], img_2.shape[1], img_2.shape[0]), colour = (0, 255, 0))
+
+    
+    # stack images horizontally
+    img_stacked = np.hstack((img, img_2))
+
+    # denormed_features = denormalized_image_coordinates(features['points'], img.shape[1], img.shape[0])
+    # denormed_features_2 = denormalized_image_coordinates(features_2['points'], img_2.shape[1], img_2.shape[0])
+
+    # draw lines between corresponding points
+    if highlight_matches:
+        if matches is not None:
+            print("drawing correspondence lines")
+            for match in matches:
+                cv2.line(img_stacked, 
+                         (
+                             int(denormalized_image_coordinates(features['points'][match[0]], img.shape[1], img.shape[0])[0,0]),
+                             int(denormalized_image_coordinates(features['points'][match[0]], img.shape[1], img.shape[0])[0,1])
+                             ), 
+                         (
+                             int(denormalized_image_coordinates(features_2['points'][match[1]], img_2.shape[1], img_2.shape[0])[0,0] + img.shape[1]), 
+                             int(denormalized_image_coordinates(features_2['points'][match[1]], img_2.shape[1], img_2.shape[0])[0,1])
+                             ), 
+                         (0, 255, 0), 10)
+
     # Convert the image to JPEG format
-    _, img_encoded = cv2.imencode('.jpg', img)
+    _, img_encoded = cv2.imencode('.jpg', img_stacked)
 
     # Create a BytesIO object and save the JPEG image data to it
     img_io = io.BytesIO(img_encoded.tobytes())

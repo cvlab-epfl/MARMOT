@@ -57,7 +57,6 @@
                     var subParts = parts[1].split("m");
                     if (subParts.length > 1) {
                         cameraId = subParts[1];
-                        console.log(cameraId);
                     }
                 }
                 break;
@@ -80,20 +79,25 @@
     });
 
 </script>
+<!-- Parent container -->
+<div style="display: flex;">
 
-<!-- display the dropdown menu with found cameras -->
-<div id="camerasContainer" class="dropdown">
-    <h1 class="title">Select Camera to Pose</h1>
-    <!-- The <select> element with the camera names will be inserted here by the JavaScript code -->
+    <!-- display the dropdown menu with found cameras (posed)-->
+    <div id="camerasContainer" class="dropdown">
+        <h1 class="title">Select Camera for World Points</h1>
+        <!-- The <select> element with the camera names will be inserted here by the JavaScript code -->
+    </div>
+
+        <!-- display the dropdown menu with found cameras (posed)-->
+    <div id="camerasContainer2" class="dropdown2">
+        <h1 class="title">Select Camera for World Points</h1>
+        <!-- The <select> element with the camera names will be inserted here by the JavaScript code -->
+    </div>
 </div>
 
-<!-- display the dropdown menu with found cameras (posed)-->
-<div id="camerasContainer2" class="dropdown2">
-    <h1 class="title">Select Camera for World Points</h1>
-    <!-- The <select> element with the camera names will be inserted here by the JavaScript code -->
-</div>
 
-<a href="/" class="btn btn-home">Back to Home</a>
+
+
 
 <style>
     .frame {
@@ -115,10 +119,23 @@
 </style>
 
 
+
+
+<!-- Parent container -->
+<div style="display: flex;">
+    <button id="nextFrameButton1">Next Frame Camera 1</button>
+    <!-- display image corresponding to highlighted camera -->
+    <div id="frameContainer" class="camera">
+        <!-- The <img> element with the frame will be inserted here by the JavaScript code -->
+    </div>
+    
+    <button id="nextFrameButton2">Next Frame Camera 2</button>
+</div>
+
 <script>
-    var frame_id = {"frameContainer":0, "secondFrameContainer":0};
+    var frame_id = 0;
+    var frame_id_2 = 0;
     function displayFrame(frame, containerId) {
-        console.log(frame_id);
         // Get the frame container element
         var frameContainer = document.getElementById(containerId);
 
@@ -129,6 +146,13 @@
         img.src = frame;
         img.className = "frame";
 
+        // Add an event listener to the img element
+        img.addEventListener('click', function(event) {
+            var x = event.offsetX;
+            var y = event.offsetY;
+            console.log('X Coordinate: ' + x + ', Y Coordinate: ' + y);
+        });
+
         // Remove any existing children from the frame container
         while (frameContainer.firstChild) {
             frameContainer.removeChild(frameContainer.firstChild);
@@ -136,70 +160,49 @@
 
         // Append the new image to the frame container
         frameContainer.appendChild(img);
-        frame_id[containerId] += 1;
     }
-    fetch('/api/camera/' + 1 + '/frame/' + 0)
+    fetch('/api/camera/' + 1 + '/frame/' + 0 + '/camera/' + 2 + '/frame/' + 0 + '/')
                 .then(response => response.blob())
                 .then(blob => {
                     var url = URL.createObjectURL(blob);
                     displayFrame(url, "frameContainer");
                 });
-    fetch('/api/camera/' + 1 + '/frame/' + 1)
-                .then(response => response.blob())
-                .then(blob => {
-                    var url = URL.createObjectURL(blob);
-                    displayFrame(url, "secondFrameContainer");
-                });
 
-    document.addEventListener('click', function(event) {
-        element = event.target;
-        console.log(element.parentElement);
-        while (element) {
-            if (element.classList.contains('camera1')) {
-                // if cameraId is not set, then initialize it to 0
-                // if (cameraId === undefined) {
-                //     cameraId = 1;
-                // }
-                console.log(cameraId);
-                fetch('/api/camera/' + cameraId + '/frame/' + frame_id["frameContainer"])
-                    .then(response => response.blob())
-                    .then(blob => {
-                        var url = URL.createObjectURL(blob);
-                        displayFrame(url, "frameContainer");
-                    });
-                    break;
-                }
+    // document.getElementById('frameContainer').addEventListener('click', function(event) {
+    //         // if cameraId is not set, then initialize it to 0
+    //         // if (cameraId === undefined) {
+    //         //     cameraId = 1;
+    //         // }
+    //         console.log(cameraId);
+    //         fetch('/api/camera/' + cameraId + '/frame/' + frame_id + '/camera/' + cameraId2 + '/frame/' + frame_id_2+ '/')
+    //             .then(response => response.blob())
+    //             .then(blob => {
+    //                 var url = URL.createObjectURL(blob);
+    //                 displayFrame(url, "frameContainer");
+    //             });
+    //         });
 
-            if (element.classList.contains('camera2')) {
-                // if cameraId is not set, then initialize it to 0
-                if (cameraId2 === undefined) {
-                    cameraId2 = 1;
-                }
-                fetch('/api/camera/' + cameraId2 + '/frame/' + (frame_id["secondFrameContainer"]))
-                    .then(response => response.blob())
-                    .then(blob => {
-                        var url = URL.createObjectURL(blob);
-                        displayFrame(url, "secondFrameContainer");
-                    });
-                    break;
-                }
-                
-            
-            element = element.parentElement;
-        }
+    document.getElementById('nextFrameButton1').addEventListener('click', function() {
+        frame_id += 1;
+        fetch('/api/camera/' + cameraId + '/frame/' + frame_id + '/camera/' + cameraId2 + '/frame/' + frame_id_2+ '/')
+            .then(response => response.blob())
+            .then(blob => {
+                var url = URL.createObjectURL(blob);
+                displayFrame(url, "frameContainer");
+            });
+    });
+
+    document.getElementById('nextFrameButton2').addEventListener('click', function() {
+        frame_id_2 += 1;
+        fetch('/api/camera/' + cameraId + '/frame/' + frame_id + '/camera/' + cameraId2 + '/frame/' + frame_id_2 + '/')
+            .then(response => response.blob())
+            .then(blob => {
+                var url = URL.createObjectURL(blob);
+                displayFrame(url, "frameContainer");
+            });
     });
 </script>
 
-<!-- Parent container -->
-<div style="display: flex;">
-    <!-- display image corresponding to highlighted camera -->
-    <div id="frameContainer" class="camera1">
-        <!-- The <img> element with the frame will be inserted here by the JavaScript code -->
-    </div>
 
-    <!-- display second image -->
-    <div id="secondFrameContainer" class="camera2">
-        <!-- The <img> element with the second frame will be inserted here by the JavaScript code -->
-    </div>
-</div>
 
+<a href="/" class="btn btn-home">Back to Home</a>
