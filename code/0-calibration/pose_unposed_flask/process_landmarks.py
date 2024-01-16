@@ -16,10 +16,10 @@ def matches_translator(matches_dir):
     Creates a unique id for each landmark , returns dictionary:
     dict{
         img1{
-            landmark_id: match_index
+            match_index: landmark_id
         }
         img2{
-            landmark_id: match_index
+            match_index: landmark_id
         }
         :
         :
@@ -28,17 +28,25 @@ def matches_translator(matches_dir):
     """
     translator = {}
     id = 0
-    for matches in os.listdir(matches_dir):
-        matches = load_pickle_gz(os.path.join(matches_dir, matches))
-
+    for matches_file in os.listdir(matches_dir):
+        matches = load_pickle_gz(os.path.join(matches_dir, matches_file))
+        img1 = matches_file.split('_')[0]
+        if img1 not in translator:
+            translator[img1] = {}
         for img in matches:
             if img not in translator:
                 translator[img] = {}
             for match in matches[img]:
+                added = added_1 = False
                 if str(match[1]) not in translator[img]:
-                    id += 1
+                    added = True
                     translator[img][str(match[1])] = id
-
+                if str(match[0]) not in translator[img1]:
+                    added_1 = True
+                    translator[img][str(match[0])] = id
+                if added and added_1:
+                    id += 1
+                
             # sort matches by landmark id
             translator[img] = dict(sorted(translator[img].items(), key=lambda item: item[1]))
 
