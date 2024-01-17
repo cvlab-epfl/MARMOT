@@ -1,91 +1,51 @@
-import pickle
-import gzip
-import numpy as np
-import os
 import json
+import cv2
+import pandas as pd
+import numpy as np
 
-def load_pickle_gz(filename):
-    print(filename)
-    with gzip.open(filename, 'rb') as f:
-        loaded_object = pickle.load(f)
-        return loaded_object
-    
+def main():
+    # create landmarks.json file
+    # the output is a dictionary with keys as image names and values as a dictionary with keys 'landmarks' and 'ids'. The ids are the track ids of the landmarks in the image. The landmarks are the pixel coordinates of the landmarks in the image.
+    tracks = pd.read_csv('../../data/0-calibration/opensfm/tracks.csv', delimiter='\t', skiprows=1, names=['image', 'track_id', 'feature_id', 'x', 'y', 'scale', 'r', 'g', 'b', 'segmentation', 'instance'])
 
-def matches_translator(matches_dir):
-    """
-    Creates a unique id for each landmark , returns dictionary:
-    dict{
-        img1{
-            match_index: landmark_id
-        }
-        img2{
-            match_index: landmark_id
-        }
-        :
-        :
-        :
-    }
-    """
-    translator = {}
-    id = 0
-    for matches_file in os.listdir(matches_dir):
-        matches = load_pickle_gz(os.path.join(matches_dir, matches_file))
-        img1 = matches_file.split('_')[0]
-        if img1 not in translator:
-            translator[img1] = {}
-        for img in matches:
-            if img not in translator:
-                translator[img] = {}
-            for match in matches[img]:
-                added = added_1 = False
-                if str(match[1]) not in translator[img]:
-                    added = True
-                    translator[img][str(match[1])] = id
-                if str(match[0]) not in translator[img1]:
-                    added_1 = True
-                    translator[img][str(match[0])] = id
-                if added and added_1:
-                    id += 2
-                
-            # sort matches by landmark id
-            translator[img] = dict(sorted(translator[img].items(), key=lambda item: item[1]))
+    def process_group(group):
+        img = cv2.imread(f'../../data/0-calibration/opensfm/images/{group.name}')
+        scale_factor = max(img.shape)
+        group['x'] = ((group['x'] + 0.5) * img.shape[1]).astype(int)
+        group['y'] = ((group['y'] + 0.5) * img.shape[0]).astype(int)
+        return {'landmarks': group[['x', 'y']].values.tolist(), 'ids': group['track_id'].values.tolist()}
 
-    return translator
-    
+    landmarks = tracks.groupby('image').apply(process_group).to_dict()
 
-def main(upload_folder):
-    match_path = os.path.join(upload_folder, 'matches')
-    # print(match_path)
-    translation = matches_translator(match_path)
-    # save translation
-    with open(os.path.join(upload_folder, 'translation.json'), 'w') as f:
-        json.dump(translation, f)
+    # save landmarks to json
+    with open('../../data/0-calibration/opensfm/landmarks.json', 'w') as f:
+        json.dump(landmarks, f, indent=4)
 
-    # landmarks = {}
-    # landmarks_global = {}
-    # img_path = os.path.join()
 
-    # for img1 in os.iterdir(img_path):
-    #     match_path = os.path.join('matches', img1, '_matches.pkl.gz')
-    #     features_path = os.path.join('features', img1, '.features.npz')
-    #     matches = load_pickle_gz(match_path)
-    #     features = np.load(features_path)
-    #     translator = {}
-    #     id = 0
-    #     for img2 in matches:
-    #         if img2 not in landmarks:
-    #             landmarks[img2] = {}
-    #         for match in matches[img2]:
-    #             translator[id] = (match[0], match[1])
-    #             landmarks[img2]["ids"]
-    #             .append(features[match[0]])
-    #             id += 1
-
+    # create landmarks_global.json file
+    # the output is a dictionary with keys as track ids and values x,y,z in world coordinates.
         
+
+    # load reconstruction
+    with open('../../data/0-calibration/opensfm/reconstruction.json') as f:
+        reconstruction = json.load(f)[0]
+
+    landmarks_global = {}
+    landmarks_global['ids'] = []
+    landmarks_global['points'] = []
+    for key, value in reconstruction['points'].items():
+        landmarks_global['ids'].append(key)
+        landmarks_global['points'].append(value['coordinates'])
+
+    # save landmarks_global to json
+    with open('../../data/0-calibration/opensfm/landmarks_global.json', 'w') as f:
+        json.dump(landmarks_global, f, indent=4)
+
+    
 
 
 
 
 if __name__ == '__main__':
-    print('Running process_landmarks.py')
-    main('F:/Github/MARMOT/uploads')
+    print('Generating landmarks.json and landmarks_global.json')
+    main()
