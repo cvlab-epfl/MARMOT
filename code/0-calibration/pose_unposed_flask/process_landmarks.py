@@ -45,7 +45,7 @@ def matches_translator(matches_dir):
                     added_1 = True
                     translator[img][str(match[0])] = id
                 if added and added_1:
-                    id += 1
+                    id += 2
                 
             # sort matches by landmark id
             translator[img] = dict(sorted(translator[img].items(), key=lambda item: item[1]))
@@ -87,4 +87,5 @@ def main(upload_folder):
 
 
 if __name__ == '__main__':
-    main('/Users/grosche/Documents/GitHub/CVLAB/MARMOT/uploads/')
+    print('Running process_landmarks.py')
+    main('F:/Github/MARMOT/uploads')

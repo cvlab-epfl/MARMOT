@@ -49,25 +49,25 @@ def allowed_file(filename):
     #        filename.rsplit('.', 1)[1].lower() in ['jpg', 'jpeg', 'png']
     return True
 
-@app.route('/upload', methods=['POST'])
-def upload_file():
-    if 'files[]' not in request.files:
-        return 'No file part', 400
-    files = request.files.getlist('files[]')
-    filenames = []
-    for file in files:
-        if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            filenames.append(filename)
-    return 'Files uploaded successfully', 200
+# @app.route('/upload', methods=['POST'])
+# def upload_file():
+#     if 'files[]' not in request.files:
+#         return 'No file part', 400
+#     files = request.files.getlist('files[]')
+#     filenames = []
+#     for file in files:
+#         if file and allowed_file(file.filename):
+#             filename = secure_filename(file.filename)
+#             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+#             filenames.append(filename)
+#     return 'Files uploaded successfully', 200
 
 
     
 
-@app.route('/images/<filename>')
-def serve_image(filename):
-    return send_from_directory('/path/to/save/uploads', filename)
+# @app.route('/images/<filename>')
+# def serve_image(filename):
+#     return send_from_directory('/path/to/save/uploads', filename)
 
 
 def return_unposed(reconstruction_data):
@@ -141,37 +141,37 @@ def home():
 from flask import request, flash
 from werkzeug.utils import secure_filename
 import os
+from flask import request, redirect, render_template
+from werkzeug.utils import secure_filename
+import os
+import json
 
 @app.route('/upload/reconstruction', methods=['GET', 'POST'])
 def upload_reconstruction():
-    global reconstruction_uploaded
-    
+    print("uploading reconstruction")
+    reconstruction_uploaded = False
+    reconstruction_data = None
+    unposed = None
 
     if request.method == 'POST':
-        if 'file' not in request.files:  # Changed from request.file to request.files
-            print('No file uploaded')
-            return redirect(request.url)
-        file = request.files['file']  # Changed from request.file to request.files
-        if file.filename == '':
-            print('No selected file')
-            return redirect(request.url)
-        if file and file.filename.endswith('json'):
+        file = request.files.get('file')
+        if file and file.filename.endswith('.json'):
             print('File uploaded successfully')
             reconstruction_uploaded = True
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            return redirect(request.url)#url_for('uploaded_file', filename=filename))
-        
-    # Check if reconstruction.json exists
+            return redirect(request.url)
+
+        print('No valid file uploaded')
+        return redirect(request.url)
+
     reconstruction_path = os.path.join(app.config['UPLOAD_FOLDER'], 'reconstruction.json')
     if os.path.exists(reconstruction_path):
         with open(reconstruction_path, 'r') as f:
             reconstruction_data = json.load(f)
-    else:
-        reconstruction_data = None
-    unposed = return_unposed(reconstruction_data[0])
-    print(unposed)
-    return render_template('upload_reconstruction.html', reconstruction_data=reconstruction_data[0], unposed=unposed)
+        unposed = return_unposed(reconstruction_data[0])
+
+    return render_template('upload_reconstruction.html', reconstruction_data=reconstruction_data[0] if reconstruction_data else None, unposed=unposed)
 
 @app.route('/upload/matches', methods=['GET', 'POST'])
 def upload_matches():
@@ -201,59 +201,57 @@ def upload_matches():
 
     return render_template('upload_matches.html', matches=matches)
 
+from flask import request, redirect, render_template
+from werkzeug.utils import secure_filename
+import os
+
 @app.route('/upload/images', methods=['GET', 'POST'])
 def upload_images():
-    global images_uploaded
+    images = None
+
     if request.method == 'POST':
-        if 'files[]' not in request.files: 
-            print('No images uploaded')
-            return redirect(request.url)
         files = request.files.getlist('files[]')
-        print('Uploaded {} images'.format(len(files)))
-        images_uploaded = True
-        if not os.path.exists(os.path.join(app.config['UPLOAD_FOLDER'], 'images')):
-            os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'images'))
-        for file in files:
-            if file.filename == '' or not file.filename.endswith('jpg', 'jpeg', 'png'):
-                continue
-            filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], 'images', filename))
+        if files:
+            print(f'Uploaded {len(files)} images')
+            images_path = os.path.join(app.config['UPLOAD_FOLDER'], 'images')
+            os.makedirs(images_path, exist_ok=True)
+            for file in files:
+                if file.filename.endswith(('jpg', 'jpeg', 'png')):
+                    filename = secure_filename(file.filename)
+                    file.save(os.path.join(images_path, filename))
+            return redirect(request.url)
+
+        print('No valid images uploaded')
         return redirect(request.url)
-    
-    # Check if images exist
+
     images_path = os.path.join(app.config['UPLOAD_FOLDER'], 'images')
     if os.path.exists(images_path):
         images = os.listdir(images_path)
-    else:
-        images = None
 
     return render_template('upload_images.html', images=images)
 
 @app.route('/upload/features', methods=['GET', 'POST'])
 def upload_features():
-    global features_uploaded
+    features = None
+
     if request.method == 'POST':
-        if 'files[]' not in request.files: 
-            print('No features uploaded')
-            return redirect(request.url)
         files = request.files.getlist('files[]')
-        print('Uploaded {} features'.format(len(files)))
-        features_uploaded = True
-        if not os.path.exists(os.path.join(app.config['UPLOAD_FOLDER'], 'features')):
-            os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'features'))
-        for file in files:
-            if file.filename == '' or not file.filename.endswith('npz'):
-                continue
-            filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], 'features', filename))
+        if files:
+            print(f'Uploaded {len(files)} features')
+            features_path = os.path.join(app.config['UPLOAD_FOLDER'], 'features')
+            os.makedirs(features_path, exist_ok=True)
+            for file in files:
+                if file.filename.endswith('npz'):
+                    filename = secure_filename(file.filename)
+                    file.save(os.path.join(features_path, filename))
+            return redirect(request.url)
+
+        print('No valid features uploaded')
         return redirect(request.url)
-    
-    # Check if features exist
+
     features_path = os.path.join(app.config['UPLOAD_FOLDER'], 'features')
     if os.path.exists(features_path):
         features = os.listdir(features_path)
-    else:
-        features = None
 
     return render_template('upload_features.html', features=features)
 
@@ -345,78 +343,71 @@ def get_camera_matches(camera_id, frame_id, camera_id_2, frame_id_2):
         return None
 
     return match_img if len(match_img) > 0 else None
-        
+
+
+from flask import request
+
+@app.route('/api/click', methods=['POST'])
+def handle_click():
+    data = request.get_json()
+    x = data['x']
+    y = data['y']
+
+    print(x, y)
+
+    # Do something with x and y...
+
+    return '', 204
 
 @app.route('/api/camera/<int:camera_id>/frame/<int:frame_id>/camera/<int:camera_id_2>/frame/<int:frame_id_2>/', methods=['GET'])
-def get_camera_frame(camera_id, frame_id, camera_id_2, frame_id_2, highlight_matches=True):
-    # This is a placeholder. Replace with your actual logic.
-    images_dir = os.path.join(app.config['UPLOAD_FOLDER'], 'images')
-    image_names = [name for name in os.listdir(images_dir) if f"cam{camera_id}_" in name]
-    image_names.sort()
+def get_camera_frame(camera_id, frame_id, camera_id_2, frame_id_2):
+    displayOption = request.args.get('displayOption', 'Display features')
 
-    img = cv2.imread(os.path.join(images_dir, image_names[frame_id % len(image_names)]))
+    def get_image(cam, frame):
+        images_dir = os.path.join(app.config['UPLOAD_FOLDER'], 'images')
+        image_names = [name for name in os.listdir(images_dir) if f"cam{cam}_" in name]
+        image_names.sort()
+        img_path = os.path.join(images_dir, image_names[frame % len(image_names)])
+        img = cv2.imread(img_path)
+        features, matches = load_features_and_matches(img_path)
+        
+        return img, features
 
-    features, matches = load_features_and_matches(image_names[frame_id % len(image_names)])
 
-    image_names_2 = [name for name in os.listdir(images_dir) if f"cam{camera_id_2}_" in name]
-    image_names_2.sort()
-    features_2, _ = load_features_and_matches(image_names_2[frame_id_2 % len(image_names_2)])
-
-    img_2 = cv2.imread(os.path.join(images_dir, image_names_2[frame_id_2 % len(image_names_2)]))
-
-    # if image shapes are different, resize
-    if img.shape[0] != img_2.shape[0] or img.shape[1] != img_2.shape[1]:
-        img = cv2.resize(img, (img_2.shape[1], img_2.shape[0]))
-
-    img = draw_features(img, denormalized_image_coordinates(features['points'], img.shape[1], img.shape[0]))
-
+    img1, features1 = get_image(camera_id, frame_id)
+    img2, features2 = get_image(camera_id_2, frame_id_2)
     
+    if img1.shape != img2.shape:
+        img1 = cv2.resize(img1, (img2.shape[1], img2.shape[0]))
+    features1 = denormalized_image_coordinates(features1['points'], img1.shape[1], img1.shape[0])
+    features2 = denormalized_image_coordinates(features2['points'], img2.shape[1], img2.shape[0])
 
-    features, matches = load_features_and_matches(image_names[frame_id % len(image_names)])
+    if displayOption == 'Display features':
+        img1 = draw_features(img1, features1)
+        img2 = draw_features(img2, features2)
 
+        img_stacked = np.hstack((img1, img2))
     
-
-    img_2 = draw_features(img_2, denormalized_image_coordinates(features_2['points'], img_2.shape[1], img_2.shape[0]))
-
-    img = draw_features(img, denormalized_image_coordinates(features['points'], img.shape[1], img.shape[0]))
-
-    if highlight_matches: 
+    if displayOption == 'Display matches':
         matches = get_camera_matches(camera_id, frame_id, camera_id_2, frame_id_2)
+        
+
         if matches is not None:
-            # print(matches)
-            img = draw_features(img, denormalized_image_coordinates(features['points'][matches[:,0]], img.shape[1], img.shape[0]), colour = (0, 255, 0))
-            img_2 = draw_features(img_2, denormalized_image_coordinates(features_2['points'][matches[:,1]], img_2.shape[1], img_2.shape[0]), colour = (0, 255, 0))
+            img1 = draw_features(img1, features1[matches[:,0]], colour=(0, 255, 0))
+            img2 = draw_features(img2, features2[matches[:,1]], colour=(0, 255, 0))
+            img_stacked = np.hstack((img1, img2))
 
-    
-    # stack images horizontally
-    img_stacked = np.hstack((img, img_2))
-
-    # denormed_features = denormalized_image_coordinates(features['points'], img.shape[1], img.shape[0])
-    # denormed_features_2 = denormalized_image_coordinates(features_2['points'], img_2.shape[1], img_2.shape[0])
-
-    # draw lines between corresponding points
-    if highlight_matches:
-        if matches is not None:
-            print("drawing correspondence lines")
             for match in matches:
+                print(match[0])
                 cv2.line(img_stacked, 
-                         (
-                             int(denormalized_image_coordinates(features['points'][match[0]], img.shape[1], img.shape[0])[0,0]),
-                             int(denormalized_image_coordinates(features['points'][match[0]], img.shape[1], img.shape[0])[0,1])
-                             ), 
-                         (
-                             int(denormalized_image_coordinates(features_2['points'][match[1]], img_2.shape[1], img_2.shape[0])[0,0] + img.shape[1]), 
-                             int(denormalized_image_coordinates(features_2['points'][match[1]], img_2.shape[1], img_2.shape[0])[0,1])
-                             ), 
-                         (0, 255, 0), 10)
+                        (int(features1[match[0],0]), int(features1[match[0],1])), 
+                        (int(features2[match[1],0] + img1.shape[1]), int(features2[match[1],1])), 
+                        (0, 255, 0), 10)
+        else:
+            img_stacked = np.hstack((img1, img2))
 
-    # Convert the image to JPEG format
     _, img_encoded = cv2.imencode('.jpg', img_stacked)
-
-    # Create a BytesIO object and save the JPEG image data to it
     img_io = io.BytesIO(img_encoded.tobytes())
-
-    # Send the image data as a file
     return send_file(img_io, mimetype='image/jpeg')
 
 
