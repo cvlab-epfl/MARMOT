@@ -3,12 +3,9 @@ import cv2
 import pandas as pd
 import os
 
-def get_landmarks(opensfm_dir, discard_omni = True):
+def get_landmarks(opensfm_dir):
     """
     Creates landmarks.json from OpenSfM tracks.csv file.
-
-    Note: For now we discard the omnidirectional images because they are not
-    associated with any camera intrinsics.
 
     Args:
         opensfm_dir (str): path to OpenSfM directory
@@ -24,8 +21,6 @@ def get_landmarks(opensfm_dir, discard_omni = True):
     tracks = pd.read_csv(tracks_path, delimiter='\t', skiprows=1, names=['image', 'track_id', 'feature_id', 'x', 'y', 'scale', 'r', 'g', 'b', 'segmentation', 'instance'])
 
     def process_group(group):
-        if discard_omni and 'perspective' in group.name:
-            return None
         img_path = os.path.join(opensfm_dir, 'images', group.name)
         img = cv2.imread(img_path)
         group['x'] = ((group['x'] + 0.5) * img.shape[1]).astype(int)
