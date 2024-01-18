@@ -7,24 +7,6 @@ import sys
 import numpy as np
 import json
 
-# sys.path.append('..')
-# from configs.arguments import get_config_dict
-# from utils.multiview_utils import Camera, Calibration, MultiviewVids
-# from utils.io_utils import write_json, load_json
-# from utils.metadata_utils import get_cam_names
-# from utils.coordinate_utils import update_reconstruction, point_in_polygon, project_to_ground_plane_cv2
-# from utils.plot_utils import rotation_matrix, perp
-
-# from scipy.spatial.transform import Rotation as R
-# from skspatial.objects import Point, Vector, Plane, Points, Line
-# import pyransac3d as pyrsc
-
-# import copy
-# import cv2
-# import ipywidgets as widgets
-# import ipympl
-# import matplotlib.pyplot as plt
-
 
 # %matplotlib widget
 
@@ -410,9 +392,162 @@ def get_camera_frame(camera_id, frame_id, camera_id_2, frame_id_2):
     img_io = io.BytesIO(img_encoded.tobytes())
     return send_file(img_io, mimetype='image/jpeg')
 
+@app.route()
+def multiview_calibration():
+    """
+    Perform Multiview Calibration using multiview_calib
+    """
+    pass
+
+def compute_relative_poses():
+    """
+    Compute relative poses between cameras using multiview_calib
+    """
+    setup_path = os.path.join(app.config['UPLOAD_FOLDER'], 'setup.json')
+    intrinsics_path = os.path.join(app.config['UPLOAD_FOLDER'], 'intrinsics.json')
+    landmarks_path = os.path.join(app.config['UPLOAD_FOLDER'], 'landmarks.json')
+    filenames_path = os.listdir(os.path.join(app.config['UPLOAD_FOLDER'], 'filenames.json'))
+
+    os.system(f"python compute_relative_poses.py -s {setup_path} -i {intrinsics_path} -l {landmarks_path} -f {filenames_path} --dump_images")
+
+    # add visualisation to the rendering
+    pass
+
+def compute_relative_poses_robust():
+    """
+    Compute relative poses between cameras using multiview_calib
+    """
+    setup_path = os.path.join(app.config['UPLOAD_FOLDER'], 'setup.json')
+    intrinsics_path = os.path.join(app.config['UPLOAD_FOLDER'], 'intrinsics.json')
+    landmarks_path = os.path.join(app.config['UPLOAD_FOLDER'], 'landmarks.json')
+    filenames_path = os.listdir(os.path.join(app.config['UPLOAD_FOLDER'], 'filenames.json'))
+    
+
+    os.system(f'python compute_relative_poses_robust.py -s {setup_path} -i {intrinsics_path} -l {landmarks_path} -f {filenames_path} --dump_images')
+
+    pass
+
+def concatenate_relative_poses():
+    """
+    Concatenate relative poses to get global poses
+    """
+    setup_path = os.path.join(app.config['UPLOAD_FOLDER'], 'setup.json')
+    relative_poses_path = os.path.join(app.config['UPLOAD_FOLDER'], 'relative_poses.json')
+
+    os.system(f'python concatenate_relative_poses.py -s {setup_path} -r {relative_poses_path} --dump_images')
+
+    pass
+
+def bundle_adjustment():
+    """
+    Perform bundle adjustment to refine the global poses
+    """
+    setup_path = os.path.join(app.config['UPLOAD_FOLDER'], 'setup.json')
+    intrinsics_path = os.path.join(app.config['UPLOAD_FOLDER'], 'intrinsics.json')
+    poses_path = os.path.join(app.config['UPLOAD_FOLDER'], 'poses.json')
+    landmarks_path = os.path.join(app.config['UPLOAD_FOLDER'], 'landmarks.json')
+    filenames_path = os.listdir(os.path.join(app.config['UPLOAD_FOLDER'], 'filenames.json'))
+    ba_config_path = os.path.join(app.config['UPLOAD_FOLDER'], 'ba_config.json')
+
+    os.system(f'python bundle_adjustment.py -s {setup_path} -i {intrinsics_path} -e {poses_path} -l {landmarks_path} -f {filenames_path} --dump_images -c {ba_config_path}')
+
+    pass
+
+
+def global_registration():
+    """
+    Perform global registration to get global poses
+    """
+    setup_path = os.path.join(app.config['UPLOAD_FOLDER'], 'setup.json')
+    ba_poses_path = os.path.join(app.config['UPLOAD_FOLDER'], 'ba_poses.json')
+    ba_points_path = os.path.join(app.config['UPLOAD_FOLDER'], 'ba_points.json')
+    landmarks_path = os.path.join(app.config['UPLOAD_FOLDER'], 'landmarks.json')
+    landmarks_global_path = os.path.join(app.config['UPLOAD_FOLDER'], 'landmarks_global.json')
+    filenames_path = os.listdir(os.path.join(app.config['UPLOAD_FOLDER'], 'filenames.json'))
+
+    os.system(f'python triangulate_image_points.py -p {ba_poses_path} -l {landmarks_path} --dump_images')
+
+
+    os.system(f'python global_registration.py -s {setup_path} -ps {ba_poses_path} -po {ba_points_path} -l {landmarks_path} -lg {landmarks_global_path} -f {filenames_path} --dump_images')
+
+    pass
+
+def create_setup_json():
+    """
+    Create setup.json file
+
+    The user needs to create a minimal_tree of cameras with overlapping views such that all cameras are connected to each other
+    """
+    setup_path = os.path.join(app.config['UPLOAD_FOLDER'], 'setup.json')
+    setup = {'views' : [], 'minimal_tree' : []}
+    # TODO:
+    # Insert user interface magic here
+    
+    # Create setup.json file
+    with open(setup_path, 'w') as f:
+        json.dump(setup, f, indent=4)
+
+    pass
+
+def choose_images_for_visualisation():
+    """
+    Choose images to visualise the calibration through multiview_calib
+    """
+    filenames_path = os.path.join(app.config['UPLOAD_FOLDER'], 'filenames.json')
+    filenames = {}
+    # TODO:
+    # Insert user interface magic here
+
+    # Create filenames.json file
+    with open(filenames_path, 'w') as f:
+        json.dump(filenames, f, indent=4)
+
+    pass
+
+
+    
+
+
+
+
 
 if __name__ == '__main__':
+
+
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])
+
+    # make ba config file
+    ba_config_path = os.path.join(app.config['UPLOAD_FOLDER'], 'ba_config.json')
+    ba_config = {
+        "each_training": 1,
+        "each_visualisation": 1,
+        "th_outliers_early": 1000.0,
+        "th_outliers": 50,
+        "optimize_points": True,
+        "optimize_camera_params": True,
+        "bounds": True,  
+        "bounds_cp": [ 
+            0.3, 0.3, 0.3,
+            2, 2, 2,
+            10, 10, 10, 10,
+            0.01, 0.01, 0, 0, 0
+        ],
+        "bounds_pt": [
+            1000,
+            1000,
+            1000
+        ],
+        "max_nfev": 200,
+        "max_nfev2": 200,
+        "ftol": 1e-08,
+        "xtol": 1e-08,  
+        "loss": "linear",
+        "f_scale": 1,
+        "output_path": "output/bundle_adjustment/",
+        }
+    
+    with open(ba_config_path, 'w') as f:
+        json.dump(ba_config, f, indent=4)
     
     app.run(debug=True)
