@@ -2,6 +2,8 @@ import json
 import cv2
 import pandas as pd
 import os
+import gzip
+import pickle
 
 def get_landmarks(opensfm_dir):
     """
@@ -114,9 +116,41 @@ def get_intrinsics(opensfm_dir):
         intrinsics[image_name] = intrinsics_from_camera(reconstruction['cameras'][reconstruction['shots'][image_name]['camera']])
  
     return intrinsics
+
+import networkx as nx
     
+def generate_minimal_tree(opensfm_dir):
+    """
+    Uses the matches to generate a minimal spanning tree of the images.
+    
+    """
+    # Create a graph
+    G = nx.Graph()
 
+    matches_dir = os.path.join(opensfm_dir, 'matches')
 
+    for img in  os.listdir(matches_dir):
+        if not img.endswith('.pkl.gz'):
+            continue
+        with gzip.open(os.path.join(matches_dir, img)) as f:
+            matches = pickle.load(f)
+
+        img_name = img.split('_')[0]
+        for target_img, features in matches.items():
+            # Here, the weight is set to 1, but it could be adjusted based on feature matches
+            G.add_edge(img, target_img, weight=1)
+
+    # Compute the minimum spanning tree
+    mst = nx.minimum_spanning_tree(G)
+
+    # Format the output
+    output = {
+        "images": list(G.nodes),    
+        "minimal_tree": list(mst.edges)
+    }
+
+    return output
+        
 
 def main():
     # set path to opensfm directory containing reconstruction.json and tracks.csv
@@ -144,6 +178,18 @@ def main():
     intrinsics_path = os.path.join(opensfm_dir, 'intrinsics.json')
     with open(intrinsics_path, 'w') as f:
         json.dump(intrinsics, f, indent=4)
+
+    # create setup.json containing minimal spanning tree
+    setup = generate_minimal_tree(opensfm_dir)
+
+    setup_path = os.path.join(opensfm_dir, 'setup.json')
+    with open(setup_path, 'w') as f:
+        json.dump(setup, f, indent=4)
+    
+    
+
+
+    
 
 if __name__ == '__main__':
     print('Generating landmarks.json and landmarks_global.json')

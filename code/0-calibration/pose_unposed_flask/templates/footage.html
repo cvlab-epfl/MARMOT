@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Data Links</title>
+</head>
+<body>
+    <h1>Data Links</h1>
+
+    <h2>Add Camera</h2>
+    <label for="camera-name">Camera Name:</label>
+    <input type="text" id="camera-name" name="camera-name" />
+
+    <label for="footage-files">Footage Files:</label>
+    <input type="file" id="footage-files" name="footage-files" multiple />
+
+    <button onclick="sendCameraData()">Submit Camera Data</button>
+
+    <h2>Add Calibration Footage (Optional)</h2>
+    <label for="calibration-camera-name">Camera Name:</label>
+    <input type="text" id="calibration-camera-name" name="calibration-camera-name" />
+
+    <label for="calibration-footage-files">Calibration Footage Files:</label>
+    <input type="file" id="calibration-footage-files" name="calibration-footage-files" multiple />
+
+    <button onclick="sendCalibrationData()">Submit Calibration Data</button>
+
+    <script>
+        function sendCameraData() {
+            const cameraName = document.getElementById('camera-name').value;
+            const footageFiles = Array.from(document.getElementById('footage-files').files).map(file => file.name);
+            fetch('http://localhost:5000/camera-data', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ [cameraName]: footageFiles }),
+            });
+        }
+
+        function sendCalibrationData() {
+            const cameraName = document.getElementById('calibration-camera-name').value;
+            const footageFiles = Array.from(document.getElementById('calibration-footage-files').files).map(file => file.name);
+            fetch('http://localhost:5000/calibration-data', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ [cameraName]: footageFiles }),
+            });
+        }
+    </script>
+</body>
+</html>
