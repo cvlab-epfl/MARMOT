@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload</title>
+</head>
+<body>
+    <h2>Select Footage Files</h2>
+    <input type="file" id="fileInput" multiple>
+    <button onclick="uploadFiles()">Upload</button>
+    <script>
+        function uploadFiles() {
+            var files = document.getElementById('fileInput').files;
+            var formData = new FormData();
+            for (var i = 0; i < files.length; i++) {
+                formData.append("files", files[i]);
+            }
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.text())
+            .then(data => {
+                console.log(data);
+            })
+            .catch(error => {
+                console.error(error);
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Title</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        form {
+            width: 300px;
+            margin: 0 auto;
+        }
+        label, input {
+            display: block;
+            margin-bottom: 10px;
+        }
+        input[type="submit"] {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <form action="/your_flask_endpoint" method="post" enctype="multipart/form-data">
+        <label for="omnitag">Tag for Omnidirectional Camera:</label>
+        <input type="text" id="omnitag" name="omnitag">
+        <label for="fileupload">Upload a file:</label>
+        <input type="file" id="fileupload" name="fileupload">
+        <input type="submit" value="Submit">
+    </form>
+</body>
+</html>

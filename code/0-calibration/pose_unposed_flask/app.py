@@ -65,9 +65,22 @@ import gzip
 
 
 
+@app.route('/your_flask_endpoint', methods=['POST'])
+def handle_form():
+    text_content = request.form['textbox']
+    filename = request.files['fileupload'].filename
+    # Do something with text_content and filename
+    return 'Form data received'
 
 
+@app.route('/setup/config')
+def segmentation():
+    return render_template('project_config.html')
 
+
+@app.route('/setup/footage')
+def symlinking():
+    return render_template('symlink_footage.html')
 
 # @app.route()
 # def multiview_calibration():

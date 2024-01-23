@@ -5,9 +5,6 @@ Sets up the environment to run the calibration pipeline.
 - Confirms found calibration footage
 - Confirms found environment footage
 """
-
-
-
 import sys
 import os
 import cv2
