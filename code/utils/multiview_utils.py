@@ -23,6 +23,7 @@ from detection.dataset.utils import Annotations
 from utils.io_utils import load_json, write_json, is_media_file
 from utils.log_utils import log, dict_to_string
 from configs.arguments import get_config_dict
+from multiprocessing import Pool
 
 
 
@@ -240,8 +241,28 @@ class BaseCamera:
                          self.calibration.size[1], 3), 
                          dtype=np.uint8)
     
+    def worker(self, filename, video_file, sorted_frame_ids, mode, rgb, output_img_long_side,   data_root, name):
+        extracted_frames = []
+        start_frame = video_file['start']
+        end_frame = video_file['end']
+        video = cv2.VideoCapture(str(data_root / 'raw_data' / mode / name / filename))
+        for frame_id in sorted_frame_ids:
+            if frame_id < start_frame or frame_id > end_frame:
+                continue
+            shifted_id = frame_id - start_frame
+            frame = self._extract_frame(video, shifted_id)
+            if rgb:
+                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            if output_img_long_side is not None:
+                scale = output_img_long_side / max(frame.shape[:2])
+                frame = cv2.resize(frame, None, fx=scale, fy=scale)
+            extracted_frames.append(frame)
+        video.release()
+        return extracted_frames
+    
     def extract(self, frame_ids: List[int], 
-                mode: str='footage', rgb=False) -> List[np.ndarray]:
+                mode: str='footage', rgb=False,
+                output_img_long_side = None) -> List[np.ndarray]:
         """
         Extracts frames from the specified video files. Frame ids are shifted
         by the first frame of the camera.
@@ -272,53 +293,61 @@ class BaseCamera:
         unsorted_indices = np.argsort(sorted_indices)
         sorted_frame_ids = np.array(valid_frame_ids)[sorted_indices]
 
+        with Pool() as p:
+            results = p.starmap(self.worker, [(video_file, self.video_dict[mode][video_file], sorted_frame_ids, mode, rgb, output_img_long_side, self.data_root, self.name) for video_file in self.video_dict[mode]])
+
         # Extract frames from each video file
-        extracted_frames = []
-        current_frame_index = 0
+        # extracted_frames = []
+        # current_frame_index = 0
 
-        for video_file in self.video_dict[mode]:
-            start_frame = self.video_dict[mode][video_file]['start']
-            end_frame = self.video_dict[mode][video_file]["end"]
+        # for video_file in self.video_dict[mode]:
+        #     start_frame = self.video_dict[mode][video_file]['start']
+        #     end_frame = self.video_dict[mode][video_file]["end"]
 
-            # Find the first frame that is within the current video
-            while (current_frame_index < len(sorted_frame_ids) and 
-                   (sorted_frame_ids[current_frame_index] < start_frame)):
-                current_frame_index += 1
-            # Extract frames from the current video
-            video = cv2.VideoCapture(str(self.data_root / 'raw_data' / mode 
-                                     / self.name / video_file))
+        #     # Find the first frame that is within the current video
+        #     while (current_frame_index < len(sorted_frame_ids) and 
+        #            (sorted_frame_ids[current_frame_index] < start_frame)):
+        #         current_frame_index += 1
+        #     # Extract frames from the current video
+        #     video = cv2.VideoCapture(str(self.data_root / 'raw_data' / mode 
+        #                              / self.name / video_file))
             
-            for idx in range(current_frame_index, len(sorted_frame_ids)):
-                # print(f"idx: {idx}, len(sorted_frame_ids): {len(sorted_frame_ids)}")
-                if sorted_frame_ids[idx] > end_frame:
-                    break
+        #     for idx in range(current_frame_index, len(sorted_frame_ids)):
+        #         # print(f"idx: {idx}, len(sorted_frame_ids): {len(sorted_frame_ids)}")
+        #         if sorted_frame_ids[idx] > end_frame:
+        #             break
 
-                # Print progress every 100 frames
-                if idx % 1 == 0:
-                    log.spam(f"Extracting frame {sorted_frame_ids[idx]} "
-                             f"from {self.name}...")
+        #         # Print progress every 100 frames
+        #         if idx % 1 == 0:
+        #             log.spam(f"Extracting frame {sorted_frame_ids[idx]} "
+        #                      f"from {self.name}...")
 
-                shifted_id = sorted_frame_ids[idx] - start_frame
+        #         shifted_id = sorted_frame_ids[idx] - start_frame
 
-                if idx % 1 == 0:
-                    log.spam(f"Extracting frame {shifted_id} "
-                                f"from {video_file}... ")
+        #         if idx % 1 == 0:
+        #             log.spam(f"Extracting frame {shifted_id} "
+        #                         f"from {video_file}... ")
                 
-                frame = self._extract_frame(video, shifted_id)
-                if rgb:
-                    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                extracted_frames.append(frame)
+        #         frame = self._extract_frame(video, shifted_id)
+        #         if rgb:
+        #             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        #         if output_img_long_side is not None:
+        #             scale = output_img_long_side / max(frame.shape[:2])
+        #             frame = cv2.resize(frame, None, fx=scale, fy=scale)
+        #         extracted_frames.append(frame)
 
-                # Compare the current frame to last frame in extracted_frames
-                # If the frames are the same, remove the current frame
-                if (len(extracted_frames) > 2 and 
-                    np.array_equal(extracted_frames[-1], extracted_frames[-2])):
-                    log.warning(f"Frame {shifted_id} same as the previous frame...")
+        #         # Compare the current frame to last frame in extracted_frames
+        #         # If the frames are the same, remove the current frame
+        #         if (len(extracted_frames) > 2 and 
+        #             np.array_equal(extracted_frames[-1], extracted_frames[-2])):
+        #             log.warning(f"Frame {shifted_id} same as the previous frame...")
 
-            current_frame_index = idx
+        #     current_frame_index = idx
             
 
-            video.release()
+        #     video.release()
+
+        extracted_frames = [frame for result in results for frame in result]
 
         # Warn if the number of extracted frames 
         # doesn't match the number of requested frames
@@ -890,7 +919,7 @@ class MultiviewVids():
     def get_max_frame_id(self) -> int:
         """Returns the maximum frame id
         """
-        self.max_frames = np.min([cam.get_max_frame_id() for cam in self.cams])
+        self.max_frames = np.min([cam.get_max_frame_id() for cam in self.cams] + [0])
 
         return self.max_frames
     

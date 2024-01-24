@@ -44,11 +44,12 @@ This command will create a Docker image named `container:latest` and log the bui
 
 To run the Docker container, use the following command from the root directory:
 
-`docker run --gpus all -v .:/root -p 8080:8080 -p 5000:5000 -it container /bin/bash`
+`docker run --gpus all -v $/data:/root:rw -v $/footage_directory:/data_source:ro -p 8080:8080 -p 5000:5000 -it container /bin/bash`
 
 Once the container is running, you can interact with it using a Bash shell. Any changes you make to the container's file system will be lost when the container is stopped.
 
-The -v flag mounts the host directory `$/data` into the container. You can modify this path as necessary.
+The -v flag mounts the host directory `$/data` into the container. You can modify this path as necessary. The second mount should be used if you plan on symlinking the footage directory to the container as symlinks are not supported by Docker.
+
 
 The -p flag maps the host port 8080 to the container port 8080. This allows you to access the Flask server running in the container from your host environment.
 The -p flag maps the host port 5000 to the container port 5000. This allows you to access the jupyter server running in the container from your host environment.
