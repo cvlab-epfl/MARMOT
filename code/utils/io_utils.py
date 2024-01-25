@@ -170,7 +170,7 @@ def get_landmarks_global(opensfm_dir):
     landmarks_global['ids'] = []
     landmarks_global['points'] = []
     for key, value in reconstruction['points'].items():
-        landmarks_global['ids'].append(key)
+        landmarks_global['ids'].append(int(key))
         landmarks_global['points'].append(value['coordinates'])
 
     return landmarks_global
@@ -196,8 +196,8 @@ def get_intrinsics(opensfm_dir):
         reconstruction = json.load(f)[0]
 
 
-        for camera in reconstruction['cameras']:
-            intrinsics[camera['image']] = {'K': camera['K'], 'distortion': camera['distortion']}
+        # for camera in reconstruction['cameras']:
+        #     intrinsics[camera['image']] = {'K': reconstruction['cameras'][camera]['K'], 'distortion': reconstruction['cameras'][camera]['distortion']}
 
     def intrinsics_from_camera(camera):
         """
@@ -251,10 +251,10 @@ def generate_minimal_tree(opensfm_dir):
         with gzip.open(os.path.join(matches_dir, img)) as f:
             matches = pickle.load(f)
 
-        img_name = img.split('_')[0]
+        img_name = img.split('_matches')[0]
         for target_img, features in matches.items():
             # Here, the weight is set to 1, but it could be adjusted based on feature matches
-            G.add_edge(img, target_img, weight=1)
+            G.add_edge(img_name, target_img, weight=1)
 
     # Compute the minimum spanning tree
     mst = nx.minimum_spanning_tree(G)
@@ -266,3 +266,24 @@ def generate_minimal_tree(opensfm_dir):
     }
 
     return output
+
+
+def get_filenames(opensfm_dir):
+    """
+    Creates filenames.json from OpenSfM images directory.
+
+    Args:
+        opensfm_dir (str): path to OpenSfM directory
+
+    Returns:
+        filenames (dict): dict({
+            'image_name': str
+        })
+    """
+    images_dir = os.path.join(opensfm_dir, 'images')
+    filenames = {}
+    for filename in os.listdir(images_dir):
+        if is_media_file(filename):
+            filenames[filename] = filename
+
+    return filenames
