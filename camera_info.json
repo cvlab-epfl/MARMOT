@@ -5,4 +5,5 @@
 
     "cam3" : {"footage" : ["f:/Github/MARMOT/data_source/raw_data/footage/cam3/Brinno104a-2023-09-20-mer..avi"], "checkerboard" : [], "K":null},
 
-    "cam360" : {"footage" : ["f:/Github/MARMOT/data_source/raw_data/footage/cam4/Brinno104a-2023-09-20-mer..avi"], "checkerboard" : [], "K":null}}
+    "cam360" : {"footage" : ["f:/Github/MARMOT/data_source/raw_data/footage/cam4/Brinno104a-2023-09-20-mer..avi"], "checkerboard" : [], "K":null}
+}
