@@ -10,7 +10,7 @@ import pandas as pd
 import os
 import gzip
 import pickle
-
+from collections import defaultdict
 mimetypes.init()
 
 def is_media_file(fileName: str) -> bool:
@@ -237,24 +237,50 @@ import networkx as nx
     
 def generate_minimal_tree(opensfm_dir):
     """
-    Uses the matches to generate a minimal spanning tree of the images.
+    Uses the tracks in tracks.csv to generate a minimal spanning tree of the images.
     
     """
     # Create a graph
     G = nx.Graph()
 
-    matches_dir = os.path.join(opensfm_dir, 'matches')
+    tracks_path = os.path.join(opensfm_dir, 'tracks.csv')
+    tracks = pd.read_csv(tracks_path, delimiter='\t', skiprows=1, names=['image', 'track_id', 'feature_id', 'x', 'y', 'scale', 'r', 'g', 'b', 'segmentation', 'instance'])
 
-    for img in  os.listdir(matches_dir):
-        if not img.endswith('.pkl.gz'):
-            continue
-        with gzip.open(os.path.join(matches_dir, img)) as f:
-            matches = pickle.load(f)
 
-        img_name = img.split('_matches')[0]
-        for target_img, features in matches.items():
-            # Here, the weight is set to 1, but it could be adjusted based on feature matches
-            G.add_edge(img_name, target_img, weight=1)
+    # Create a dictionary where the keys are track_ids and the values are lists of images
+    track_dict = defaultdict(list)
+    for idx, img in tracks.iterrows():
+        # print(img)
+        track_dict[img.track_id].append(img.image)
+
+    # For each track_id, add an edge between all pairs of images with that track_id
+    for images in track_dict.values():
+        for i in range(len(images)):
+            for j in range(i + 1, len(images)):
+                G.add_edge(images[i], images[j], weight=1)
+
+    # for img1 in tracks:
+    #     for img2 in tracks:
+    #         if img1 == img2:
+    #             continue
+    #         else:
+    #             if img1.track_id ==  img2.track_id:
+    #                 G.add_edge(img1, img2, weight = 1)
+
+
+    # matches_dir = os.path.join(opensfm_dir, 'matches')
+
+    # for img in  os.listdir(matches_dir):
+    #     if not img.endswith('.pkl.gz'):
+    #         continue
+    #     with gzip.open(os.path.join(matches_dir, img)) as f:
+    #         matches = pickle.load(f)
+
+    #     img_name = img.split('_matches')[0]
+
+    #     for target_img, features in matches.items():
+    #         # Here, the weight is set to 1, but it could be adjusted based on feature matches
+    #         G.add_edge(img_name, target_img, weight=1)
 
     # Compute the minimum spanning tree
     mst = nx.minimum_spanning_tree(G)

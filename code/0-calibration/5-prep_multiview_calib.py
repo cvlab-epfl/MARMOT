@@ -8,6 +8,7 @@ from utils.io_utils import write_json
 import argparse
 
 
+
 def main():
     # get interval id from command line
     parser = argparse.ArgumentParser()
@@ -16,14 +17,14 @@ def main():
     args = parser.parse_args()
     # interval_id = args.interval
 
-    opensfm_dir = args.opensfm_dir
+    opensfm_dir = os.path.join(args.opensfm_dir, 'undistorted')
 
     # get landmarks
     landmarks = get_landmarks(opensfm_dir)
     landmarks_global = get_landmarks_global(opensfm_dir)
     minimal_tree = generate_minimal_tree(opensfm_dir)
-    intrinsics = get_intrinsics(os.path.join(opensfm_dir, 'undistorted'))
-    filenames = get_filenames(os.path.join(opensfm_dir, 'undistorted'))
+    intrinsics = get_intrinsics(opensfm_dir)
+    filenames = get_filenames(opensfm_dir)
 
     # save the files
     write_json(os.path.join(opensfm_dir, 'landmarks.json'), landmarks)
