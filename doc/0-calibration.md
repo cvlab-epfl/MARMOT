@@ -1,17 +1,49 @@
 # 0-Calibration
 
 This module takes the raw calibration sequence and generates the calibration (intrinsics + extrinsics) for all the cameras in the scene.
-Further information can be found at: https://github.com/wgrosche/MultiviewCameraCalibration/
+
+It includes scene segmentation steps for large scenes, and a ground plane calibration step.
+
+To address the case of unposed cameras we include a manual keypoint matching step to aid in the calibration process.
 
 ### Input
 
+The input to this module is the raw footage from the cameras. This is placed in the following directory structure:
+
 - `data/raw_data/`
+    - `calibration/`  
+        - `camname1/`
+            - `video_1.mp4`
+            - `video_2.avi`
+            - ...
+        - `camname2/`
+            - `video_1.mp4`
+            - `video_2.avi`
+            - ...
+        - ...
+
+    - `footage/`  
+        - `camname1/`
+            - `video_1.mp4`
+            - `video_2.avi`
+            - ...
+        - `camname2/`
+            - `video_1.mp4`
+            - `video_2.avi`
+            - ...
+        - ...
+
+Calibration contains checkerboard footage for calibration. Footage contains the footage for the scene.
+
 ### Output
 
-- `data/0-calibration`
-- `data/0-calibration/calibs/camname1_new.json`
-- `data/0-calibration/calibs/camname2_new.json`
+The output of the calibration setp is contained in the following directory structure:
 
+- `data/0-calibration/`
+    - `calibs/camname1_new.json`
+    - `calibs/camname2_new.json`
+
+The calibration files contain the intrinsics and extrinsics for each camera.
 
 
 ## 0-calibration-setup
