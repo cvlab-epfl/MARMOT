@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Upload reconstruction.json</title>
+    <!-- Add a link to a CSS file to style your page -->
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">Upload reconstruction.json</h1>
+        <form method="post" enctype="multipart/form-data" class="upload-form">
+            <div class="form-group">
+                <label for="files">Select reconstruction.json:</label>
+                <input type="file" id="files" name="file" class="form-control">
+            </div>
+            <input type="submit" value="Upload" class="btn btn-success">
+        </form>
+        <a href="/" class="btn btn-home">Back to Home</a>
+
+        {% if reconstruction_data %}
+            <h2 class="sub-title">Found Cameras in reconstruction.json:</h2>
+            <ul class="image-list">
+                {% for key in reconstruction_data.cameras %}
+                    <li>{{ key }}</li>
+                {% endfor %}
+            </ul>
+            <h2 class="sub-title">Of which unposed:</h2>
+            <ul class="image-list">
+                {% for key in unposed %}
+                    <li>{{ key }}</li>
+                {% endfor %}
+        {% else %}
+            <p class="no-images">No reconstruction.json uploaded yet.</p>
+        {% endif %}
+
+    </div>
+</body>
+</html>

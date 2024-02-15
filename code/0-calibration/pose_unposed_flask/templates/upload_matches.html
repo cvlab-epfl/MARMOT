@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Upload matches</title>
+    <!-- Add a link to a CSS file to style your page -->
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">Upload matches files for each image</h1>
+        <form method="post" enctype="multipart/form-data" class="upload-form">
+            <div class="form-group">
+                <label for="files">Select matches:</label>
+                <input type="file" id="files" name="files[]" multiple class="form-control">
+            </div>
+            <input type="submit" value="Upload" class="btn btn-success">
+        </form>
+        <a href="/" class="btn btn-home">Back to Home</a>
+
+        {% if matches %}
+            <h2 class="sub-title">Uploaded Files:</h2>
+            <ul class="image-list">
+                {% for match in matches %}
+                    <li>{{ match }}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="no-images">No matches uploaded yet.</p>
+        {% endif %}
+    </div>
+</body>
+</html>
