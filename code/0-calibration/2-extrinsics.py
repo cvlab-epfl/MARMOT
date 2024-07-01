@@ -15,6 +15,8 @@ num_extract = 2
 num_extract_omni = 40
 skip_percent_frames = 0.10
 
+
+
 # imports
 import os
 import sys
@@ -31,6 +33,10 @@ from utils.multiview_utils import Camera
 from utils.metadata_utils import get_cam_names
 from configs.arguments import get_config_dict
 from utils.io_utils import write_json
+
+omni_frame_ids = np.linspace(1200, 2700, 30, dtype=int)
+persp_frame_ids = [100, 200, 300, 400]
+
 
 try:
     config = get_config_dict()
@@ -81,6 +87,8 @@ def main():
             if camera.is_omni:
                 frame_ids = np.linspace(first_frame, last_frame, 
                                         num_extract_omni, dtype=int)
+                if omni_frame_ids is not None:
+                    frame_ids = omni_frame_ids
                 frames = camera.extract(frame_ids)
                 height, width = frames[0].shape[:-1]
                 proj_type = 'spherical'
@@ -96,6 +104,8 @@ def main():
             else:
                 frame_ids = np.linspace(first_frame, last_frame, 
                                         num_extract, dtype=int)
+                if persp_frame_ids is not None:
+                    frame_ids = persp_frame_ids
                 frames = camera.extract(frame_ids)
                 K = camera.get_calib().K
                 frames = camera.undistort(frames=frames)
