@@ -2,7 +2,13 @@ import os
 import json
 from pathlib import Path
 
-root_dir = Path('/root')
+# Path to the code directory
+# BASEPATH = os.path.dirname(os.path.abspath(__file__)).split('code')[-2]
+# CODEPATH = os.path.join(BASEPATH, 'code')
+# DATAPATH = os.path.join(BASEPATH, 'data')
+# sys.path.append(CODEPATH)
+
+root_dir = Path(os.path.dirname(os.path.abspath(__file__)))
 calib_path = root_dir / 'data/0-calibration/calibs/'
 
 data_folder = root_dir / 'data/raw_data'

@@ -6,7 +6,7 @@ from configs.utils import read_yaml_file, convert_yaml_dict_to_arg_list, fill_di
 from configs.utils import args_to_dict
 from utils.log_utils import log, set_log_level, dict_to_string
 
-
+BASEPATH = os.path.dirname(os.path.abspath(__file__)).split('code')[-2]
 parser = argparse.ArgumentParser(description='Process some integers.')
 
 #add argument group for calib, ann, train, infer and track
@@ -17,12 +17,12 @@ parser_train = parser.add_argument_group("training")
 parser_infer = parser.add_argument_group("inference")
 parser_track = parser.add_argument_group("tracking")
 
-parser_main.add_argument("-cfg", "--config_file", dest="config_file", help="Path to a YAML file containing of argument that will be used as new default value, if command line argument are specified they will override the value from the YAML file", type=str, default="/root/project_config.yaml")
+parser_main.add_argument("-cfg", "--config_file", dest="config_file", help="Path to a YAML file containing of argument that will be used as new default value, if command line argument are specified they will override the value from the YAML file", type=str, default=BASEPATH + "/project_config.yaml")
 # parser.add_argument("-l", "--log_lvl", dest="log_lvl", default="debug", choices=["debug", "spam", "verbose", "info", "warning", "error"], help='Set level of logger to get more or less verbose output')
 # parser.add_argument("-dr", "--data_root", dest="data_root", help="Path to the data folder", type=str, default=None)
 # parser_main.add_argument("-cfg", "--config_file", dest="config_file", help="Path to a YAML file containing of argument that will be used as new default value, if command line argument are specified they will override the value from the YAML file", type=str, default="./project_config.yaml")
 parser_main.add_argument("-l", "--log_lvl", dest="log_lvl", default="debug", choices=["debug", "spam", "verbose", "info", "warning", "error"], help='Set level of logger to get more or less verbose output')
-parser_main.add_argument("-dr", "--data_root", dest="data_root", help="Path to the data folder", type=str, default=None)
+parser_main.add_argument("-dr", "--data_root", dest="data_root", help="Path to the data folder", type=str, default=BASEPATH + "/data")
 parser_main.add_argument("-data", "--data", dest="data", help="Path to the raw footage to be symlinked", type=str, default=None)
 parser_main.add_argument("-cr", "--code_root", dest="code_root", help="Path to the code folder", type=str, default=None)
 parser_main.add_argument("-sf", "--save_framerate", dest="save_framerate", help="Framerate use for visualization 1 is real time, highger value will speed up the video output", type=int, default=10)

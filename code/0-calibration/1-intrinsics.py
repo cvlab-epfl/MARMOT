@@ -10,7 +10,11 @@ import cv2
 import argparse
 import numpy as np
 
-sys.path.append('..')
+# Path to the code directory
+BASEPATH = os.path.dirname(os.path.abspath(__file__)).split('code')[-2]
+CODEPATH = os.path.join(BASEPATH, 'code')
+DATAPATH = os.path.join(BASEPATH, 'data')
+sys.path.append(CODEPATH)
 
 from pathlib import Path
 

@@ -24,6 +24,8 @@ from utils.io_utils import load_json, write_json, is_media_file
 from utils.log_utils import log, dict_to_string
 from configs.arguments import get_config_dict
 
+BASEPATH = os.path.dirname(os.path.abspath(__file__)).split('code')[-2]
+
 
 
 Calibration = namedtuple('Calibration', 

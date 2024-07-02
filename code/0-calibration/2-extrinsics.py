@@ -15,8 +15,6 @@ num_extract = 2
 num_extract_omni = 40
 skip_percent_frames = 0.10
 
-
-
 # imports
 import os
 import sys
@@ -26,7 +24,11 @@ import subprocess
 import pyexif
 from pathlib import Path
 
-sys.path.append('..')
+# Path to the code directory
+BASEPATH = os.path.dirname(os.path.abspath(__file__)).split('code')[-2]
+CODEPATH = os.path.join(BASEPATH, 'code')
+DATAPATH = os.path.join(BASEPATH, 'data')
+sys.path.append(CODEPATH)
 
 from utils.log_utils import log
 from utils.multiview_utils import Camera
@@ -44,7 +46,7 @@ except:
     log.warning("No config file found. Using default values.")
     config = {}
 
-data_root = Path(config.get('main', {}).get('data_root', '/root/data'))
+data_root = Path(config.get('main', {}).get('data_root', DATAPATH))
 omni_tag = config.get('calibration', {}).get('omni_tag', '360')
 force_reconstruction = config.get('calibration', 
                                   {}).get('force_reconstruction', False)
@@ -140,23 +142,23 @@ def main():
         bash_command = f"bash {osfm_runall} {opensfm_data}"
         process = subprocess.Popen(bash_command.split(), stdout=subprocess.PIPE)
 
-        # Wait for command to finish and get return code
-        return_code = process.wait()
+        # # Wait for command to finish and get return code
+        # return_code = process.wait()
 
-        log.info(f"SfM pipeline finished with return code: {return_code}")
+        # log.info(f"SfM pipeline finished with return code: {return_code}")
 
-        if return_code != 0:
-            log.error("SfM pipeline failed.")
-            return 1
+        # if return_code != 0:
+        #     log.error("SfM pipeline failed.")
+        #     return 1
 
-    cams = get_cam_names(env_footage, omni_tag=omni_tag)
+    # cams = get_cam_names(env_footage, omni_tag=omni_tag)
 
-    for cam in cams:
-        camera = Camera(cam, newest=False)
-        camera.calib_from_reconstruction(opensfm_data / 'reconstruction.json')
-        if camera.is_calibrated():
-            log.info(f"Camera {cam} calibrated.")
-            camera.save_calibration()
+    # for cam in cams:
+    #     camera = Camera(cam, newest=False)
+    #     camera.calib_from_reconstruction(opensfm_data / 'reconstruction.json')
+    #     if camera.is_calibrated():
+    #         log.info(f"Camera {cam} calibrated.")
+    #         camera.save_calibration()
     return 0
 
         
