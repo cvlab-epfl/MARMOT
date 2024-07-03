@@ -81,14 +81,23 @@ def main():
         print(f"Processing camera {cam}")
         camera = Camera(cam, newest=False)      
         query = [p.relative_to(images).as_posix() for p in (images).iterdir() if omni_tag not in p.name and cam in p.name][0]
-        camera = pycolmap.infer_camera_from_image(images / query)
+        print(query)
+        camera_colmap = pycolmap.infer_camera_from_image(images / query)
+
+        extract_features.main(
+            feature_conf, images, image_list=[query], feature_path=features, overwrite=True
+        )
+        pairs_from_exhaustive.main(loc_pairs, image_list=[query], ref_list=references)
+        match_features.main(
+            matcher_conf, loc_pairs, features=features, matches=matches, overwrite=True
+        )
         ref_ids = [model.find_image_with_name(r).image_id for r in references if model.find_image_with_name(r) is not None]
         conf = {
             "estimation": {"ransac": {"max_error": 12}},
             "refinement": {"refine_focal_length": True, "refine_extra_params": True},
         }
         localizer = QueryLocalizer(model, conf)
-        ret, log = pose_from_cluster(localizer, query, camera, ref_ids, features, matches)
+        ret, _ = pose_from_cluster(localizer, query, camera_colmap, ref_ids, features, matches)
         pose = ret['cam_from_world']
 
         print(f'found {ret["num_inliers"]}/{len(ret["inliers"])} inlier correspondences.')

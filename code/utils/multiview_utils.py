@@ -388,7 +388,7 @@ class Camera(BaseCamera):
     Calibrated Camera that stores intrinsics and extrinsics. Allows for 
     undistortion of frames and conversion between camera and world coordinates.
     """
-    def __init__(self, name:str, newest:bool=True):
+    def __init__(self, name:str, newest:bool=True, data_root:Optional[Path]=None):
         super().__init__(name)
         self.calibration = Calibration(view_id = self.name.split('m')[1])
 
