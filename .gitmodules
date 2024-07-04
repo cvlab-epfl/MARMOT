@@ -2,3 +2,6 @@
 	path = code/1-annotation/multicam-gt
 	url = https://github.com/cvlab-epfl/multicam-gt.git
 	branch = MARMOT
+[submodule "code/0-calibration/multiview_calib"]
+	path = code/0-calibration/multiview_calib
+	url = https://github.com/cvlab-epfl/multiview_calib.git

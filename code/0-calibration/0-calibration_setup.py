@@ -12,7 +12,9 @@ import sys
 import os
 import cv2
 
-sys.path.append('..')
+BASEPATH = os.path.dirname(os.path.abspath(__file__)).split('0-calibration')[0]
+
+sys.path.append(BASEPATH)
 
 from pathlib import Path
 
@@ -30,7 +32,7 @@ def main():
             data_source = Path(data_source) / 'raw_data'
     except FileNotFoundError:
         log.warning("No config file found.")
-        data_root = '/root/data'
+        data_root = Path('/root') / 'data'
         data_source = None
 
     calibration_dir = data_root /'0-calibration'
