@@ -69,7 +69,7 @@ def main():
     match_features.main(
         matcher_conf, sfm_pairs, features=features, matches=matches
     )
-    opts = dict(camera_model = "SIMPLE_RADIAL")#, camera_params =','.join(map(str, (256, 256, 256, 0))))
+    opts = dict(camera_model = "SIMPLE_RADIAL", camera_params =','.join(map(str, (1, 256, 256, 0))))
 
     model = reconstruction.main(
         sfm_dir, images, sfm_pairs, features, matches, image_list=references, image_options = opts

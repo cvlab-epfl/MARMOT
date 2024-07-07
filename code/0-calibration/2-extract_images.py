@@ -136,27 +136,6 @@ def main():
 
                 for future in as_completed(futures):
                     pass
-                            
-
-
-                # for index in tqdm(frame_ids, desc=f"Extracting {cam} frames"):
-                #     frame = camera.extract([index])[0]
-                #     height, width = frame.shape[:-1]
-                #     proj_type = 'perspective'
-                #     cam_dict["projection_type"] = proj_type
-                #     face_w = 512
-                #     cam_dict["focal"] = face_w / 2
-                #     cam_dict["width"] = face_w
-                #     cam_dict["height"] = face_w
-                #     perspectives = py360convert.e2c(frame, face_w=face_w, cube_format='list')
-                #     for j, image in enumerate(perspectives):
-                #         file_path =  images_dir / f'{camera.name}_{index}_{j}.jpg' 
-                #         cv2.imwrite(str(file_path), image)
-                #         metadata = pyexif.ExifEditor(file_path)
-                #         metadata.setTag('Model', camera.name)
-                #         metadata.setTag('Make', camera.name)
-                #         cam_key = f"v2 {cam}_side_{j}  {face_w} {face_w} perspective 0.0"
-                # camera_models_overrides_dict[cam_key] = cam_dict
 
         else:
             frame_ids = np.linspace(first_frame, last_frame, 
