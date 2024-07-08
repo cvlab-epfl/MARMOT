@@ -143,13 +143,13 @@ def main():
             if persp_frame_ids is not None:
                 frame_ids = persp_frame_ids
             frames = camera.extract(frame_ids)
-            K = camera.get_calib().K
-            frames = camera.undistort(frames=frames)
+            # K = camera.get_calib().K
+            # frames = camera.undistort(frames=frames)
             height, width = frames[0].shape[:-1]
-            focal_length = (K[0][0]+K[1][1]) / (np.max([height, width])*2)
+            # focal_length = (K[0][0]+K[1][1]) / (np.max([height, width])*2)
             proj_type ='perspective'
-            cam_dict["projection_type"] = proj_type
-            cam_dict["focal"] = focal_length
+            # cam_dict["projection_type"] = proj_type
+            # cam_dict["focal"] = focal_length
 
             for i, frame in tqdm(enumerate(frames), desc=f"Extracting {cam} frames"):
                 index = frame_ids[i]

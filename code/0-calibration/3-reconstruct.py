@@ -51,8 +51,8 @@ def main():
                 p.unlink()
 
     # configurations
-    feature_conf = extract_features.confs["superpoint_aachen"]
-    matcher_conf = match_features.confs["superpoint+lightglue"]
+    feature_conf = extract_features.confs["disk"]
+    matcher_conf = match_features.confs["disk+lightglue"]
 
     # reference images (360)
     references = [p.relative_to(images).as_posix() for p in (images).iterdir() if omni_tag in p.name]
