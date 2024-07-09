@@ -2,6 +2,7 @@ from pathlib import Path
 from setuptools import setup, find_packages, Command
 import subprocess
 import os
+import sys
 
 __version__ = 1.0
 
@@ -17,6 +18,10 @@ class InstallSubmodules(Command):
         pass
 
     def run(self):
+
+        self.announce('Installing main package dependencies', level=3)
+        subprocess.check_call([sys.executable, '-m', 'pip', 'install', '-r', 'requirements.txt'])
+
         # Define the submodules and their setup commands
         submodules = {
             'hloc': {
@@ -31,7 +36,7 @@ class InstallSubmodules(Command):
                     ['pip', 'install', '-e', '.'],
                 ]
             },
-            
+
         }
 
         # Run the setup commands for each submodule
