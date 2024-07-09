@@ -1,1 +1,9 @@
 py360convert
+ipykernel
+jupyter
+numpy<2.0
+pyexif
+coloredlogs
+verboselogs
+shapely
+scikit-spatial
