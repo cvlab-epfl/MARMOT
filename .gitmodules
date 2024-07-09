@@ -5,3 +5,6 @@
 [submodule "code/0-calibration/multiview_calib"]
 	path = code/0-calibration/multiview_calib
 	url = https://github.com/cvlab-epfl/multiview_calib.git
+[submodule "code/0-calibration/hloc"]
+	path = code/0-calibration/hloc
+	url = https://github.com/cvg/Hierarchical-Localization.git

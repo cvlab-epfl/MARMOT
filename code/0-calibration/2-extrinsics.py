@@ -14,6 +14,7 @@ force_reconstruction = False
 num_extract = 2
 num_extract_omni = 40
 skip_percent_frames = 0.10
+run_opensfm = False
 
 # imports
 import os
@@ -137,10 +138,11 @@ def main():
 
         write_json(overrides_filepath, camera_models_overrides_dict)
 
-        # Run openSfM on the data folder
-        osfm_runall = opensfm_repo / 'bin' / 'opensfm_run_all'
-        bash_command = f"bash {osfm_runall} {opensfm_data}"
-        process = subprocess.Popen(bash_command.split(), stdout=subprocess.PIPE)
+        if run_opensfm:
+            # Run openSfM on the data folder
+            osfm_runall = opensfm_repo / 'bin' / 'opensfm_run_all'
+            bash_command = f"bash {osfm_runall} {opensfm_data}"
+            process = subprocess.Popen(bash_command.split(), stdout=subprocess.PIPE)
 
         # # Wait for command to finish and get return code
         # return_code = process.wait()
