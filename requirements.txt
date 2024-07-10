@@ -7,3 +7,4 @@ coloredlogs
 verboselogs
 shapely
 scikit-spatial
+scikit-image

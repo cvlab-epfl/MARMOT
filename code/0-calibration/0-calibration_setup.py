@@ -11,12 +11,11 @@ Sets up the environment to run the calibration pipeline.
 import sys
 import os
 import cv2
-
-BASEPATH = os.path.dirname(os.path.abspath(__file__)).split('0-calibration')[0]
-
-sys.path.append(BASEPATH)
-
 from pathlib import Path
+BASEPATH = Path(os.path.dirname(os.path.abspath(__file__)).split('0-calibration')[0])
+print(BASEPATH)
+sys.path.append(BASEPATH.as_posix())
+
 
 from utils.log_utils import log
 from utils.metadata_utils import get_cam_names
@@ -25,8 +24,8 @@ from configs.arguments import get_config_dict
 def main():
     try:
         config = get_config_dict()
-        data_root = Path(config.get('main', {}).get('data_root', '/root/data'))
-        root_code = Path(config.get('main', {}).get('code_root', '/root/code')) 
+        data_root = Path(config.get('main', {}).get('data_root', BASEPATH / 'data'))
+        root_code = Path(config.get('main', {}).get('code_root', BASEPATH / 'code')) 
         data_source = config.get('main', {}).get('data', None)
         if data_source is not None:
             data_source = Path(data_source) / 'raw_data'

@@ -68,18 +68,60 @@ env_footage = data_root / 'raw_data' / 'footage'
 images_dir = data_root / '0-calibration' / 'images'
 output_dir = data_root / '0-calibration' / 'outputs'
 
+output_dir.mkdir(parents=True, exist_ok=True)
+
 REEXTRACT = True
 views_list = ['forward', 'right', 'back', 'left', 'up', 'down']
-def process_omni_frame(frame, camera:Camera, index, face_w):
+const = 1 / np.sqrt(2)
+quat_list = [
+    [1, 0, 0, 0],
+    [-const, 0, const, 0],
+    [0, 0, 1, 0],
+    [const, 0, const, 0],
+    [const, 0, 0, const],
+    [-const, 0, 0, const]
+]
+rig_adjuster_config = [
+        {
+            "ref_camera_id":1,
+            "cameras":
+            []
+        }
+    ]
+
+def process_omni_frame(frame, camera:Camera, index, face_w, rig_adjuster_config):
     perspectives = py360convert.e2c(frame, face_w=face_w, cube_format='list')
+    
+    
     for j, image in enumerate(perspectives):
-        views_folder = images_dir / f'{camera.name}_{index}'
+        cam_id = j + 1
+        views_folder = images_dir / f'{camera.name}_view_{views_list[j]}'
         views_folder.mkdir(parents=True, exist_ok=True)
-        file_path =  views_folder / f'view_{views_list[j]}.jpg' 
+        file_path =  views_folder / f'{index}.jpg' 
         cv2.imwrite(str(file_path), image)
         metadata = pyexif.ExifEditor(file_path)
         metadata.setTag('Model', camera.name)
         metadata.setTag('Make', camera.name)
+
+        config_entry = {
+            "camera_id": cam_id,
+            "image_prefix": f"{camera.name}_view_{views_list[j]}",
+            "cam_from_rig_rotation": quat_list[j],
+            "cam_from_rig_translation": [0, 0, 0]
+        }
+        if config_entry not in rig_adjuster_config[0]["cameras"]:
+            rig_adjuster_config[0]["cameras"].append(config_entry)
+    return rig_adjuster_config
+    
+
+def process_perspective_frame(frame, camera:Camera, index):
+    views_folder = images_dir / f'{camera.name}_view_{views_list[0]}'
+    views_folder.mkdir(parents=True, exist_ok=True)
+    file_path =  views_folder / f'{index}.jpg' 
+    cv2.imwrite(str(file_path), frame)
+    metadata = pyexif.ExifEditor(file_path)
+    metadata.setTag('Model', camera.name)
+    metadata.setTag('Make', camera.name)
 
 def main():
     log.info("Extracting Images...")
@@ -127,7 +169,7 @@ def main():
                     cam_dict["height"] = face_w
                     for i, frame in enumerate(frames):
                         index = batch_frame_ids[i]
-                        futures.append(executor.submit(process_omni_frame, frame, camera, index, face_w))
+                        futures.append(executor.submit(process_omni_frame, frame, camera, index, face_w, rig_adjuster_config))
 
                 for future in as_completed(futures):
                     pass
@@ -148,16 +190,15 @@ def main():
 
             for i, frame in tqdm(enumerate(frames), desc=f"Extracting {cam} frames"):
                 index = frame_ids[i]
-                file_path =  images_dir / f'{camera.name}_{index}.jpg'              
-                cv2.imwrite(str(file_path), frame)
-                metadata = pyexif.ExifEditor(file_path)
-                metadata.setTag('Model', camera.name)
-                metadata.setTag('Make', camera.name)
+                process_perspective_frame(frame, camera, index)
 
             cam_dict["width"] = width
             cam_dict["height"] = height
             cam_key = f"v2 {cam}  {width} {height} perspective 0.0"
             camera_models_overrides_dict[cam_key] = cam_dict
+
+    # save rig_adjuster_config
+    write_json(output_dir / "rig_config.json", rig_adjuster_config)
 
 if __name__ == "__main__":
     main()
