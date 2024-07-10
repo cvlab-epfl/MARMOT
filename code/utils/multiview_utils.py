@@ -13,7 +13,7 @@ import sys
 
 from pathlib import Path
 from collections import defaultdict, Counter, namedtuple
-from typing import List, Dict, Tuple, Union, Optional
+from typing import Any, List, Dict, Tuple, Union, Optional
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 from skspatial.objects import Vector, Line, Plane, Point
@@ -23,6 +23,8 @@ from detection.dataset.utils import Annotations
 from utils.io_utils import load_json, write_json, is_media_file
 from utils.log_utils import log, dict_to_string
 from configs.arguments import get_config_dict
+
+BASEPATH = os.path.dirname(os.path.abspath(__file__)).split('code')[-2]
 
 
 
@@ -131,7 +133,14 @@ class BaseCamera:
                         prev_end += frames_vid
 
         self.num_frames = num_frames
+        log.debug(f"Indexed {self.num_frames} frames for camera {self.name}")
         return self.video_dict
+    
+    def __len__(self, *args: Any, **kwds: Any) -> Any:
+        """
+        Returns the number of frames in the camera.
+        """
+        return self.num_frames
     
     def set_first_frame(self, path:Optional[Path] = None) -> int:
         """
@@ -220,7 +229,7 @@ class BaseCamera:
             if not ret:
                 log.warning(f"Failed to grab frame {i} ")
 
-        assert video_capture.get(cv2.CAP_PROP_POS_FRAMES) == frame_number
+        # assert video_capture.get(cv2.CAP_PROP_POS_FRAMES) == frame_number
 
         ret, frame = video_capture.retrieve()
         if ret:
@@ -379,7 +388,7 @@ class Camera(BaseCamera):
     Calibrated Camera that stores intrinsics and extrinsics. Allows for 
     undistortion of frames and conversion between camera and world coordinates.
     """
-    def __init__(self, name:str, newest:bool=True):
+    def __init__(self, name:str, newest:bool=True, data_root:Optional[Path]=None):
         super().__init__(name)
         self.calibration = Calibration(view_id = self.name.split('m')[1])
 

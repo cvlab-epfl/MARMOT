@@ -1,0 +1,169 @@
+<style>
+    .frame {
+        max-width: 100%; /* Limit the width to the width of the parent element */
+        height: auto; /* Keep the aspect ratio */
+    }
+    .camera1 {
+    width: 50%; /* Each container takes up half of the parent container's width */
+    }
+    .camera2 {
+    width: 50%; /* Each container takes up half of the parent container's width */
+    }
+
+    .camera img {
+    width: 100%; /* The image takes up the full width of its container */
+    height: auto; /* The height is adjusted automatically to maintain the aspect ratio */
+}
+
+</style>
+
+<!-- Parent container -->
+<div style="display: flex;">
+
+    <!-- display the dropdown menu with found cameras (posed)-->
+    <div id="camerasContainer" class="dropdown">
+        <h1 class="title">Select Camera for World Points</h1>
+        <!-- The <select> element with the camera names will be inserted here by the JavaScript code -->
+    </div>
+
+        <!-- display the dropdown menu with found cameras (posed)-->
+    <div id="camerasContainer2" class="dropdown2">
+        <h1 class="title">Select Camera for World Points</h1>
+        <!-- The <select> element with the camera names will be inserted here by the JavaScript code -->
+    </div>
+</div>
+
+<!-- Parent container -->
+<div style="display: flex;">
+    <button id="nextFrameButton1">Next Frame Camera 1</button>
+    <!-- display image corresponding to highlighted camera -->
+    <div id="frameContainer" class="camera">
+        <!-- The <img> element with the frame will be inserted here by the JavaScript code -->
+    </div>
+    
+    <button id="nextFrameButton2">Next Frame Camera 2</button>
+</div>
+
+
+<script>
+    window.cameraId = 1;
+    window.cameraId2 = 1;
+    let frameId = 0;
+    let frameId2 = 0;
+
+    function fetchCameras(containerId) {
+        fetch('/api/cameras')
+            .then(response => response.json())
+            .then(cameras => displayCameras(cameras, containerId));
+    }
+
+    function displayCameras(cameras, containerId) {
+        const camerasContainer = document.getElementById(containerId);
+        camerasContainer.innerHTML = ''; // Clear the container
+
+        const select = document.createElement('select');
+        select.className = containerId === 'camerasContainer' ? 'dropdown' : 'dropdown2';
+        select.id = containerId === 'camerasContainer' ? 'firstCameraDropdown' : 'secondCameraDropdown';
+
+        cameras.forEach(camera => {
+            const option = document.createElement('option');
+            option.value = camera;
+            option.innerText = camera;
+            select.appendChild(option);
+        });
+
+        camerasContainer.appendChild(select);
+    }
+
+    function handleCameraChange(event, cameraIdVar) {
+        const parts = event.target.value.split(" ");
+        if (parts.length > 1) {
+            const subParts = parts[1].split("m");
+            if (subParts.length > 1) {
+                console.log(cameraIdVar);
+                window[cameraIdVar] = subParts[1];
+            }
+        }
+        console.log(cameraId, frameId, cameraId2, frameId2)
+        fetchFrame(cameraId, frameId, cameraId2, frameId2, "frameContainer");
+    }
+
+    let displayOption = 'Display features'; // Global state for display option
+
+    // Function to handle change in display option
+    function handleDisplayOptionChange(event) {
+        displayOption = event.target.value;
+    }
+
+    // Update fetchFrame to include displayOption as a query parameter
+    function fetchFrame(cameraId, frameId, cameraId2, frameId2, containerId) {
+        fetch(`/api/camera/${cameraId}/frame/${frameId}/camera/${cameraId2}/frame/${frameId2}/?displayOption=${displayOption}`)
+            .then(response => response.blob())
+            .then(blob => {
+                const url = URL.createObjectURL(blob);
+                displayFrame(url, containerId);
+            });
+    }
+
+    // Add a dropdown for display options
+    const select = document.createElement('select');
+    select.addEventListener('change', handleDisplayOptionChange);
+
+    const options = ['Display features', 'Display matches', 'Display matches and features', 'Add features', 'Add matches'];
+    options.forEach(option => {
+        const optionElement = document.createElement('option');
+        optionElement.value = option;
+        optionElement.innerText = option;
+        select.appendChild(optionElement);
+    });
+
+    document.body.appendChild(select);
+
+    function displayFrame(frame, containerId) {
+        const frameContainer = document.getElementById(containerId);
+        const img = document.createElement('img');
+        img.src = frame;
+        img.className = "frame";
+        img.addEventListener('click', function(event) {
+            const img = event.target;
+            const rect = img.getBoundingClientRect();
+            const scaleX = img.naturalWidth / rect.width;    // relationship bitmap vs. element for X
+            const scaleY = img.naturalHeight / rect.height;  // relationship bitmap vs. element for Y
+
+            const x = (event.clientX - rect.left) * scaleX;  // scale mouse coordinates after they have
+            const y = (event.clientY - rect.top) * scaleY;   // been adjusted to be relative to element
+            console.log(x, y);
+
+            fetch('/api/click', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ x: x, y: y }),
+            });
+        });
+
+        frameContainer.innerHTML = ''; // Clear the container
+        frameContainer.appendChild(img);
+    }
+
+    fetchCameras('camerasContainer');
+    fetchCameras('camerasContainer2');
+
+    document.getElementById('camerasContainer').addEventListener('change', (event) => handleCameraChange(event, 'cameraId'));
+    document.getElementById('camerasContainer2').addEventListener('change', (event) => handleCameraChange(event, 'cameraId2'));
+
+    fetchFrame(cameraId, frameId, cameraId2, frameId2, "frameContainer");
+
+    document.getElementById('nextFrameButton1').addEventListener('click', function() {
+        frameId += 1;
+        fetchFrame(cameraId, frameId, cameraId2, frameId2, "frameContainer");
+    });
+
+    document.getElementById('nextFrameButton2').addEventListener('click', function() {
+        frameId2 += 1;
+        fetchFrame(cameraId, frameId, cameraId2, frameId2, "frameContainer");
+    });
+</script>
+
+<a href="/" class="btn btn-home">Back to Home</a>
