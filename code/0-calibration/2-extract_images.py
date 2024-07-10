@@ -62,11 +62,6 @@ except:
 
 data_root = Path(config.get('main', {}).get('data_root', DATAPATH))
 omni_tag = config.get('calibration', {}).get('omni_tag', '360')
-force_reconstruction = config.get('calibration', 
-                                  {}).get('force_reconstruction', False)
-opensfm_repo = Path(config.get('calibration', 
-                               {}).get('opensfm_repo', '/OpenSfM'))
-
 # set up paths
 env_footage = data_root / 'raw_data' / 'footage'
 # opensfm_data =  data_root / '0-calibration' / 'opensfm'
@@ -74,11 +69,13 @@ images_dir = data_root / '0-calibration' / 'images'
 output_dir = data_root / '0-calibration' / 'outputs'
 
 REEXTRACT = True
-
+views_list = ['forward', 'right', 'back', 'left', 'up', 'down']
 def process_omni_frame(frame, camera:Camera, index, face_w):
     perspectives = py360convert.e2c(frame, face_w=face_w, cube_format='list')
     for j, image in enumerate(perspectives):
-        file_path =  images_dir / f'{camera.name}_{index}_{j}.jpg' 
+        views_folder = images_dir / f'{camera.name}_{index}'
+        views_folder.mkdir(parents=True, exist_ok=True)
+        file_path =  views_folder / f'view_{views_list[j]}.jpg' 
         cv2.imwrite(str(file_path), image)
         metadata = pyexif.ExifEditor(file_path)
         metadata.setTag('Model', camera.name)
@@ -87,8 +84,6 @@ def process_omni_frame(frame, camera:Camera, index, face_w):
 def main():
     log.info("Extracting Images...")
     
-    
-
     if REEXTRACT:
         if images_dir.is_dir():
             log.info("Removing existing images directory.")
@@ -126,7 +121,7 @@ def main():
                     height, width = frames[0].shape[:-1]
                     proj_type = 'perspective'
                     cam_dict["projection_type"] = proj_type
-                    face_w = 512
+                    face_w = width // 4
                     cam_dict["focal"] = face_w / 2
                     cam_dict["width"] = face_w
                     cam_dict["height"] = face_w
@@ -136,27 +131,6 @@ def main():
 
                 for future in as_completed(futures):
                     pass
-                            
-
-
-                # for index in tqdm(frame_ids, desc=f"Extracting {cam} frames"):
-                #     frame = camera.extract([index])[0]
-                #     height, width = frame.shape[:-1]
-                #     proj_type = 'perspective'
-                #     cam_dict["projection_type"] = proj_type
-                #     face_w = 512
-                #     cam_dict["focal"] = face_w / 2
-                #     cam_dict["width"] = face_w
-                #     cam_dict["height"] = face_w
-                #     perspectives = py360convert.e2c(frame, face_w=face_w, cube_format='list')
-                #     for j, image in enumerate(perspectives):
-                #         file_path =  images_dir / f'{camera.name}_{index}_{j}.jpg' 
-                #         cv2.imwrite(str(file_path), image)
-                #         metadata = pyexif.ExifEditor(file_path)
-                #         metadata.setTag('Model', camera.name)
-                #         metadata.setTag('Make', camera.name)
-                #         cam_key = f"v2 {cam}_side_{j}  {face_w} {face_w} perspective 0.0"
-                # camera_models_overrides_dict[cam_key] = cam_dict
 
         else:
             frame_ids = np.linspace(first_frame, last_frame, 
@@ -164,13 +138,13 @@ def main():
             if persp_frame_ids is not None:
                 frame_ids = persp_frame_ids
             frames = camera.extract(frame_ids)
-            K = camera.get_calib().K
-            frames = camera.undistort(frames=frames)
+            # K = camera.get_calib().K
+            # frames = camera.undistort(frames=frames)
             height, width = frames[0].shape[:-1]
-            focal_length = (K[0][0]+K[1][1]) / (np.max([height, width])*2)
+            # focal_length = (K[0][0]+K[1][1]) / (np.max([height, width])*2)
             proj_type ='perspective'
-            cam_dict["projection_type"] = proj_type
-            cam_dict["focal"] = focal_length
+            # cam_dict["projection_type"] = proj_type
+            # cam_dict["focal"] = focal_length
 
             for i, frame in tqdm(enumerate(frames), desc=f"Extracting {cam} frames"):
                 index = frame_ids[i]

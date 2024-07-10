@@ -1,0 +1,122 @@
+{
+    "v2 unknown unknown 1954 862 perspective 0.0": {
+        "projection_type": "perspective",
+        "width": 1954,
+        "height": 862,
+        "focal": 0.85,
+        "k1": 0.0,
+        "k2": 0.0
+    },
+    "v2 unknown unknown 1920 1080 perspective 0.0": {
+        "projection_type": "perspective",
+        "width": 1920,
+        "height": 1080,
+        "focal": 0.85,
+        "k1": 0.0,
+        "k2": 0.0
+    },
+    "v2 unknown unknown 560 418 perspective 0.0": {
+        "projection_type": "perspective",
+        "width": 560,
+        "height": 418,
+        "focal": 0.85,
+        "k1": 0.0,
+        "k2": 0.0
+    },
+    "v2 unknown unknown 1791 347 perspective 0.0": {
+        "projection_type": "perspective",
+        "width": 1791,
+        "height": 347,
+        "focal": 0.85,
+        "k1": 0.0,
+        "k2": 0.0
+    },
+    "v2 unknown unknown 736 470 perspective 0.0": {
+        "projection_type": "perspective",
+        "width": 736,
+        "height": 470,
+        "focal": 0.85,
+        "k1": 0.0,
+        "k2": 0.0
+    },
+    "v2 unknown unknown 580 335 perspective 0.0": {
+        "projection_type": "perspective",
+        "width": 580,
+        "height": 335,
+        "focal": 0.85,
+        "k1": 0.0,
+        "k2": 0.0
+    },
+    "v2 unknown unknown 718 468 perspective 0.0": {
+        "projection_type": "perspective",
+        "width": 718,
+        "height": 468,
+        "focal": 0.85,
+        "k1": 0.0,
+        "k2": 0.0
+    },
+    "v2 unknown unknown 768 768 perspective 0.0": {
+        "projection_type": "perspective",
+        "width": 768,
+        "height": 768,
+        "focal": 0.85,
+        "k1": 0.0,
+        "k2": 0.0
+    },
+    "v2 unknown unknown 560 342 perspective 0.0": {
+        "projection_type": "perspective",
+        "width": 560,
+        "height": 342,
+        "focal": 0.85,
+        "k1": 0.0,
+        "k2": 0.0
+    },
+    "v2 unknown unknown 426 240 perspective 0.0": {
+        "projection_type": "perspective",
+        "width": 426,
+        "height": 240,
+        "focal": 0.85,
+        "k1": 0.0,
+        "k2": 0.0
+    },
+    "v2 unknown unknown 1226 714 perspective 0.0": {
+        "projection_type": "perspective",
+        "width": 1226,
+        "height": 714,
+        "focal": 0.85,
+        "k1": 0.0,
+        "k2": 0.0
+    },
+    "v2 unknown unknown 1018 706 perspective 0.0": {
+        "projection_type": "perspective",
+        "width": 1018,
+        "height": 706,
+        "focal": 0.85,
+        "k1": 0.0,
+        "k2": 0.0
+    },
+    "v2 unknown unknown 974 583 perspective 0.0": {
+        "projection_type": "perspective",
+        "width": 974,
+        "height": 583,
+        "focal": 0.85,
+        "k1": 0.0,
+        "k2": 0.0
+    },
+    "v2 unknown unknown 1277 729 perspective 0.0": {
+        "projection_type": "perspective",
+        "width": 1277,
+        "height": 729,
+        "focal": 0.85,
+        "k1": 0.0,
+        "k2": 0.0
+    },
+    "v2 unknown unknown 1979 643 perspective 0.0": {
+        "projection_type": "perspective",
+        "width": 1979,
+        "height": 643,
+        "focal": 0.85,
+        "k1": 0.0,
+        "k2": 0.0
+    }
+}

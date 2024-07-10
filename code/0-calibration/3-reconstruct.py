@@ -51,8 +51,8 @@ def main():
                 p.unlink()
 
     # configurations
-    feature_conf = extract_features.confs["superpoint_aachen"]
-    matcher_conf = match_features.confs["superpoint+lightglue"]
+    feature_conf = extract_features.confs["disk"]
+    matcher_conf = match_features.confs["disk+lightglue"]
 
     # reference images (360)
     references = [p.relative_to(images).as_posix() for p in (images).iterdir() if omni_tag in p.name]
@@ -69,7 +69,7 @@ def main():
     match_features.main(
         matcher_conf, sfm_pairs, features=features, matches=matches
     )
-    opts = dict(camera_model = "SIMPLE_RADIAL")#, camera_params =','.join(map(str, (256, 256, 256, 0))))
+    opts = dict(camera_model = "SIMPLE_RADIAL", camera_params =','.join(map(str, (1, 256, 256, 0))))
 
     model = reconstruction.main(
         sfm_dir, images, sfm_pairs, features, matches, image_list=references, image_options = opts
