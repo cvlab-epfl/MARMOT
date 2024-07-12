@@ -1,0 +1,16 @@
+# Project config
+---
+  --main:
+     --data_root: "/Users/grosche/Documents/GitHub/MARMOT/data" # "/Users/sarno/Documents/GitHub/Pomelo/data" #"/root/data"
+     --code_root: "/Users/grosche/Documents/GitHub/MARMOT/code" # "/Users/sarno/Documents/GitHub/Pomelo/code" #"/root/code"
+     --data: "/Users/grosche/Documents/GitHub/MARMOT/raw" #"/root/data" #
+
+  --calibration:
+   #   --focal_length: "507" # tag to be added to metadata
+     --omni_tag: '360'     # tag to identify omnidirectional camera
+     --opensfm_repo: "/OpenSfM" #"/Users/grosche/Documents/GitHub/OpenSfM/"
+  
+  --annotation:
+    --num_train_sample: "400"
+    --val_seq_length: "100"
+

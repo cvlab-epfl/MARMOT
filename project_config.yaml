@@ -1,9 +1,9 @@
 # Project config
 ---
   --main:
-     --data_root: "/Users/grosche/Documents/GitHub/MARMOT/data" # "/Users/sarno/Documents/GitHub/Pomelo/data" #"/root/data"
-     --code_root: "/Users/grosche/Documents/GitHub/MARMOT/code" # "/Users/sarno/Documents/GitHub/Pomelo/code" #"/root/code"
-     --data: /Users/grosche/Documents/GitHub/MARMOT/data" #"/root/data" #
+     --data_root: "/Users/friedrichwilkegrosche/GitHub/MARMOT/data" # "/Users/sarno/Documents/GitHub/Pomelo/data" #"/root/data"
+     --code_root: "/Users/friedrichwilkegrosche/GitHub/MARMOT/code" # "/Users/sarno/Documents/GitHub/Pomelo/code" #"/root/code"
+     --data: "/Users/friedrichwilkegrosche/GitHub/MARMOT/raw" #"/root/data" #
 
   --calibration:
    #   --focal_length: "507" # tag to be added to metadata

@@ -99,9 +99,9 @@ def process_omni_frame(frame, camera:Camera, index, face_w, rig_adjuster_config)
         views_folder.mkdir(parents=True, exist_ok=True)
         file_path =  views_folder / f'{index}.jpg' 
         cv2.imwrite(str(file_path), image)
-        metadata = pyexif.ExifEditor(file_path)
-        metadata.setTag('Model', camera.name)
-        metadata.setTag('Make', camera.name)
+        # metadata = pyexif.ExifEditor(file_path)
+        # metadata.setTag('Model', camera.name)
+        # metadata.setTag('Make', camera.name)
 
         config_entry = {
             "camera_id": cam_id,
@@ -119,9 +119,9 @@ def process_perspective_frame(frame, camera:Camera, index):
     views_folder.mkdir(parents=True, exist_ok=True)
     file_path =  views_folder / f'{index}.jpg' 
     cv2.imwrite(str(file_path), frame)
-    metadata = pyexif.ExifEditor(file_path)
-    metadata.setTag('Model', camera.name)
-    metadata.setTag('Make', camera.name)
+    # metadata = pyexif.ExifEditor(file_path)
+    # metadata.setTag('Model', camera.name)
+    # metadata.setTag('Make', camera.name)
 
 def main():
     log.info("Extracting Images...")
