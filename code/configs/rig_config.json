@@ -61,36 +61,6 @@
           0,
           0
         ]
-      },
-      {
-        "camera_id": 5,
-        "image_prefix": "cam360_view_up",
-        "cam_from_rig_rotation": [
-          0.7071067811865475,
-          0,
-          0,
-          0.7071067811865475
-        ],
-        "cam_from_rig_translation": [
-          0,
-          0,
-          0
-        ]
-      },
-      {
-        "camera_id": 6,
-        "image_prefix": "cam360_view_down",
-        "cam_from_rig_rotation": [
-          -0.7071067811865475,
-          0,
-          0,
-          0.7071067811865475
-        ],
-        "cam_from_rig_translation": [
-          0,
-          0,
-          0
-        ]
       }
     ]
   }
