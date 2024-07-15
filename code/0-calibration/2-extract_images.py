@@ -48,7 +48,7 @@ from utils.metadata_utils import get_cam_names
 from configs.arguments import get_config_dict
 from utils.io_utils import write_json
 
-omni_frame_ids = np.linspace(1200, 2700, 30, dtype=int)
+omni_frame_ids = None #np.linspace(1200, 2700, 30, dtype=int)
 persp_frame_ids = [100]
 omni_frame_min = 1200
 omni_frame_max = 2700
@@ -94,6 +94,8 @@ def process_omni_frame(frame, camera:Camera, index, face_w, rig_adjuster_config)
     
     
     for j, image in enumerate(perspectives):
+        # if views_list[j] in ['back', 'up', 'down']:
+        #     continue
         cam_id = j + 1
         views_folder = images_dir / f'{camera.name}_view_{views_list[j]}'
         views_folder.mkdir(parents=True, exist_ok=True)
@@ -145,14 +147,14 @@ def main():
 
         cam_dict = {}
         if camera.is_omni:
-            # num_extract_omni = (last_frame - first_frame) // 60
+            num_extract_omni = (last_frame - first_frame) // 15
             frame_ids = np.linspace(first_frame, last_frame, 
                                     num_extract_omni, dtype=int)
             if omni_frame_ids is not None:
                 frame_ids = omni_frame_ids
-            elif omni_frame_min is not None and omni_frame_max is not None:
-                frame_ids = np.linspace(omni_frame_min, omni_frame_max, 
-                                        num_extract_omni, dtype=int)
+            # elif omni_frame_min is not None and omni_frame_max is not None:
+            #     frame_ids = np.linspace(omni_frame_min, omni_frame_max, 
+            #                             num_extract_omni, dtype=int)
             all_frame_ids = frame_ids
             batch_size = 10
             with ThreadPoolExecutor() as executor:
