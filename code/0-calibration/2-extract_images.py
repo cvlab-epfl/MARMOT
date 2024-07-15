@@ -48,7 +48,8 @@ from utils.metadata_utils import get_cam_names
 from configs.arguments import get_config_dict
 from utils.io_utils import write_json
 
-omni_frame_ids = None #np.linspace(1200, 2700, 30, dtype=int)
+
+omni_frame_ids = np.linspace(1200, 2700, 1500 // 500, dtype=int)
 persp_frame_ids = [100]
 omni_frame_min = 1200
 omni_frame_max = 2700
@@ -200,7 +201,7 @@ def main():
             camera_models_overrides_dict[cam_key] = cam_dict
 
     # save rig_adjuster_config
-    write_json(output_dir / "rig_config.json", rig_adjuster_config)
+    write_json(CODEPATH / "configs" / "rig_config.json", rig_adjuster_config)
 
 if __name__ == "__main__":
     main()

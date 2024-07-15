@@ -1,0 +1,31 @@
+feature_extractor:
+  database_path: "data/0-calibration/output/database.db"
+  image_path: "data/0-calibration/images"
+
+matcher:
+  database_path: "data/0-calibration/output/database.db"
+
+mapper:
+  database_path: "data/0-calibration/output/database.db"
+  image_path: "data/0-calibration/images"
+  output_path: "data/0-calibration/output/sfm"
+
+rig_bundle_adjustment:
+  input_path: "data/0-calibration/output/sfm"
+  output_path: "data/0-calibration/output/sfm_bundled"
+  rig_config_path: "code/configs/rig_config.json"
+
+model_orientation_aligner:
+  input_path: "data/0-calibration/output/sfm_bundled"
+  output_path: "data/0-calibration/output/sfm_oriented"
+
+hierarchical_mapper:
+  database_path: "data/0-calibration/output/database.db"
+  image_path: "data/0-calibration/images"
+  output_path: "data/0-calibration/output/sfm"
+
+point_triangulator:
+  database_path: "data/0-calibration/output/database.db"
+  image_path: "data/0-calibration/images"
+  input_path: "data/0-calibration/output/sfm"
+  output_path: "data/0-calibration/output/sfm"

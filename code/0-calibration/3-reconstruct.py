@@ -31,87 +31,76 @@ from configs.arguments import get_config_dict
 from utils.io_utils import write_json
 
 images = Path(DATAPATH) / "0-calibration" / "images"
-outputs = Path(DATAPATH) / "outputs"
+outputs = Path(DATAPATH) / "0-calibration" / "output"
 omni_tag = "360"
 
-def main():
-    # define paths to output files
-    sfm_pairs = outputs / "pairs-sfm.txt"
-    loc_pairs = outputs / "pairs-loc.txt"
-    sfm_dir = outputs / "sfm"
-    features = outputs / "features.h5"
-    matches = outputs / "matches.h5"
+import yaml
+import subprocess
 
-    # clear output directory
-    if not outputs.exists():
-        outputs.mkdir()
-    else:
-        for p in outputs.iterdir():
-            if p.is_file():
-                p.unlink()
+def load_config(config_path):
+    with open(config_path, 'r') as file:
+        config = yaml.safe_load(file)
+    return config
 
-    # configurations
-    feature_conf = extract_features.confs["disk"]
-    matcher_conf = match_features.confs["disk+lightglue"]
+def run_colmap_command(command, **kwargs):
+    cmd = ['colmap', command]
+    for key, value in kwargs.items():
+        if isinstance(value, dict):
+            for sub_key, sub_value in value.items():
+                cmd.append(f'--{sub_key}={sub_value}')
+        else:
+            cmd.append(f'--{key}={value}')
+    print(f"Running command: {' '.join(cmd)}")
+    subprocess.run(cmd, check=True)
 
-    # reference images (360)
-    references = [p.relative_to(images).as_posix() for p in (images).iterdir() if omni_tag in p.name]
+def localise_camera(camera:Camera, config_path:Path):
+    config = load_config(config_path)
+    query = [img_name for img_name in images if camera.name in img_name and not '360' in img_name]
 
-    # extract features
     extract_features.main(
-        feature_conf, images, image_list=references, feature_path=features
+        feature_conf, images, image_list=[query], feature_path=features, overwrite=True
     )
-
-    # generate pairs
-    pairs_from_exhaustive.main(sfm_pairs, image_list=references)
-
-    # match features
+    pairs_from_exhaustive.main(loc_pairs, image_list=[query], ref_list=references)
     match_features.main(
-        matcher_conf, sfm_pairs, features=features, matches=matches
-    )
-    opts = dict(camera_model = "SIMPLE_RADIAL", camera_params =','.join(map(str, (1, 256, 256, 0))))
+        matcher_conf, loc_pairs, features=features, matches=matches, overwrite=True
+    );
 
-    model = reconstruction.main(
-        sfm_dir, images, sfm_pairs, features, matches, image_list=references, image_options = opts
-    )
-    # pose cameras
-    cams = get_cam_names(images, omni_tag=omni_tag)
+def main(config_path= Path(CODEPATH) / "configs" / 'colmap_config.yaml'):
+    config = load_config(config_path)
+
+    outputs.mkdir(exist_ok=True, parents=True)
+    sfm_dir = outputs / "sfm"
+    sfm_dir.mkdir(exist_ok=True, parents=True)
+
+    # Feature Extraction
+    run_colmap_command('feature_extractor', **config['feature_extractor'])
+
+    # Matching
+    run_colmap_command('sequential_matcher', **config['matcher'])
+
+    # Reconstruction
+    run_colmap_command('hierarchical_mapper', **config['mapper'])
+
+    # Retriangulate
+    run_colmap_command('point_triangulator', **config['mapper'])
+
+    # Bundle Adjustment
+    run_colmap_command('bundle_adjuster', **config['bundle_adjustment'])
+
+    # Rig Bundle Adjustment
+    run_colmap_command('rig_bundle_adjuster', **config['rig_bundle_adjustment'])
+
+    # Model Orientation Aligner
+    run_colmap_command('model_orientation_aligner', **config['model_orientation_aligner'])
+
+    return 1
+    cams = get_cam_names(DATAPATH / "raw_data" / "footage")
+    log.info(f"Found {(cams)} in environment footage.")
 
     for cam in cams:
-        print(f"Processing camera {cam}")
-        camera = Camera(cam, newest=False)      
-        query = [p.relative_to(images).as_posix() for p in (images).iterdir() if omni_tag not in p.name and cam in p.name][0]
-        print(query)
-        camera_colmap = pycolmap.infer_camera_from_image(images / query)
+        camera = Camera(cam, newest=False)
 
-        extract_features.main(
-            feature_conf, images, image_list=[query], feature_path=features, overwrite=True
-        )
-        pairs_from_exhaustive.main(loc_pairs, image_list=[query], ref_list=references)
-        match_features.main(
-            matcher_conf, loc_pairs, features=features, matches=matches, overwrite=True
-        )
-        ref_ids = [model.find_image_with_name(r).image_id for r in references if model.find_image_with_name(r) is not None]
-        conf = {
-            "estimation": {"ransac": {"max_error": 12}},
-            "refinement": {"refine_focal_length": True, "refine_extra_params": True},
-        }
-        localizer = QueryLocalizer(model, conf)
-        ret, _ = pose_from_cluster(localizer, query, camera_colmap, ref_ids, features, matches)
-        pose = ret['cam_from_world']
-
-        print(f'found {ret["num_inliers"]}/{len(ret["inliers"])} inlier correspondences.')
-
-        camera.set_calib(Calibration(
-                R=pose.rotation.matrix(), 
-                T=pose.translation, view_id=camera.calibration.view_id, 
-                K=camera.calibration.K, 
-                K_new=camera.calibration.K_new, 
-                dist=camera.calibration.dist,
-                size = camera.calibration.size))
-        if camera.is_calibrated():
-            log.info(f"Camera {cam} calibrated.")
-            camera.save_calibration()
+    
 
 if __name__ == '__main__':
     main()
