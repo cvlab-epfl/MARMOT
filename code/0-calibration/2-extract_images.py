@@ -77,7 +77,7 @@ def process_omni_frame(frame, camera:Camera, index, face_w, rig_adjuster_config,
         file_path =  views_folder / f'{index}.jpg'
         if views_list[j] in ['right', 'back']:
             image = np.fliplr(image)
-        elif views_list[j] in ['down']:
+        elif views_list[j] in ['up']:
             image = np.flipud(image)
         cv2.imwrite(str(file_path), image)
 
