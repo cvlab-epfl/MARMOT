@@ -74,7 +74,11 @@ def process_omni_frame(frame, camera:Camera, index, face_w, rig_adjuster_config,
         cam_id = j + 1
         views_folder = images_dir / f'{camera.name}_view_{views_list[j]}'
         views_folder.mkdir(parents=True, exist_ok=True)
-        file_path =  views_folder / f'{index}.jpg' 
+        file_path =  views_folder / f'{index}.jpg'
+        if views_list[j] in ['right', 'back']:
+            image = np.fliplr(image)
+        elif views_list[j] in ['down']:
+            image = np.flipud(image)
         cv2.imwrite(str(file_path), image)
 
         config_entry = {
