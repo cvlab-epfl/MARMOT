@@ -1,9 +1,9 @@
 # Project config
 ---
   --main:
-     --data_root: "/Users/grosche/Documents/GitHub/MARMOT/data" #"/Users/friedrichwilkegrosche/GitHub/MARMOT/data" # "/Users/grosche/Documents/GitHub/Pomelo/data" #"/root/data"
-     --code_root: "/Users/grosche/Documents/GitHub/MARMOT/code" #"/Users/grosche/Documents/GitHub/MARMOT/code" #"/Users/friedrichwilkegrosche/GitHub/MARMOT/code" # "/Users/grosche/Documents/GitHub/Pomelo/code" #"/root/code"
-     --data: "/Users/grosche/Documents/GitHub/MARMOT/data" #"/Users/grosche/Documents/GitHub/MARMOT/data" # #"/root/data" #
+     --data_root: "/mnt/f/Github/MARMOT/data" #"/Users/friedrichwilkegrosche/GitHub/MARMOT/data" # "/Users/grosche/Documents/GitHub/Pomelo/data" #"/root/data"
+     --code_root: "/mnt/f/Github/MARMOT/code" #"/Users/grosche/Documents/GitHub/MARMOT/code" #"/Users/friedrichwilkegrosche/GitHub/MARMOT/code" # "/Users/grosche/Documents/GitHub/Pomelo/code" #"/root/code"
+     --data: "/mnt/f/Github/MARMOT/data" #"/Users/grosche/Documents/GitHub/MARMOT/data" # #"/root/data" #
      
 
   --calibration:

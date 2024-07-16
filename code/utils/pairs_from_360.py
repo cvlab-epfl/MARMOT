@@ -29,17 +29,18 @@ def main(
     pairs = []
     for frame_index in range(len(view_files[view_dirs[0]]) - 1):
         for view_dir in view_dirs:
-            for offset in range(1, window_size + 1):
-                if frame_index + offset < len(view_files[view_dir]):
-                    current_image = view_dir / view_files[view_dir][frame_index]
-                    next_image = view_dir / view_files[view_dir][frame_index + offset]
-                    pairs.append((str(current_image), str(next_image)))
+            for view_dir_2 in view_dirs:
+                for offset in range(1, window_size + 1):
+                    if frame_index + offset < len(view_files[view_dir]):
+                        current_image = view_dir / view_files[view_dir][frame_index]
+                        next_image = view_dir_2 / view_files[view_dir_2][frame_index + offset]
+                        pairs.append((str(current_image).split('images/')[-1], str(next_image).split('images/')[-1]))
 
-                if quadratic:
-                    q = 2**offset
-                    if frame_index + q < len(view_files[view_dir]):
-                        next_image_quad = view_dir / view_files[view_dir][frame_index + q]
-                        pairs.append((str(current_image), str(next_image_quad)))
+                    if quadratic:
+                        q = 2**offset
+                        if frame_index + q < len(view_files[view_dir]):
+                            next_image_quad = view_dir / view_files[view_dir][frame_index + q]
+                            pairs.append((str(current_image).split('images/')[-1], str(next_image_quad).split('images/')[-1]))
 
     if loop_closure:
         retrieval_pairs_tmp = output.parent / f'retrieval-pairs-tmp.txt'
@@ -73,7 +74,7 @@ def main(
 
         os.unlink(retrieval_pairs_tmp)
 
-    logger.info(f'Found {len(pairs)} pairs.')
+    logger.info(f'Found {len(pairs)} pairs. {pairs}')
     with open(output, 'w') as f:
         f.write('\n'.join(' '.join([i, j]) for i, j in pairs))
 

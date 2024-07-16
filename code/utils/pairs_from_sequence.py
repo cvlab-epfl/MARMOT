@@ -88,7 +88,7 @@ def main(
 
         os.unlink(retrieval_pairs_tmp)
 
-    logger.info(f'Found {len(pairs)} pairs.')
+    logger.info(f'Found {len(pairs)} pairs. {pairs}')
     with open(output, 'w') as f:
         f.write('\n'.join(' '.join([i, j]) for i, j in pairs))
 
