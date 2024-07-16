@@ -99,6 +99,9 @@ def main(config_path= Path(CODEPATH) / "configs" / 'colmap_config.yaml'):
 
     for cam in cams:
         camera = Camera(cam, newest=False)
+        extrinsics = localise_camera()
+        calib = camera.get_calib()
+        camera.set_calib(Calibration())
 
     
 
