@@ -72,6 +72,7 @@ def transform_points(points, camera):
 # TODO: Verify setting of translation and rotation
 def camera_calibs_from_colmap(images_path:Path, model:pycolmap.Reconstruction, omni_tag='360', save=True):
     cams = get_cam_names(images_path, omni_tag=omni_tag)
+    cameras = []
     for cam in cams:
         camera = Camera(cam)
         for id, image in model.images.items():
@@ -83,6 +84,10 @@ def camera_calibs_from_colmap(images_path:Path, model:pycolmap.Reconstruction, o
                                 R = world_t_camera.rotation.matrix().T,
                                 T = - world_t_camera.rotation.matrix().T @ world_t_camera.translation
                                 ))
+                    
+                    cameras.append(camera)
                     if save:
                         print("Saving Camera Calibration")
                         camera.save_calibration()
+
+    return cameras
