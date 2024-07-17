@@ -183,6 +183,7 @@ def main():
             if persp_frame_ids is not None:
                 frame_ids = persp_frame_ids
             frames = camera.extract(frame_ids)
+            frames = camera.undistort(frames=frames)
 
             for i, frame in tqdm(enumerate(frames), desc=f"Extracting {cam} frames"):
                 index = frame_ids[i]
