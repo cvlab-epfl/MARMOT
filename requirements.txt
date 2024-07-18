@@ -12,3 +12,5 @@ coloredlogs
 verboselogs
 numpy<2.0
 pyceres
+pyransac3d
+ipympl

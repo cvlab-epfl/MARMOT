@@ -1,14 +1,14 @@
 # Project config
 ---
   --main:
-     --data_root: "/Users/friedrichwilkegrosche/GitHub/MARMOT/data" # "/Users/sarno/Documents/GitHub/Pomelo/data" #"/root/data"
-     --code_root: "/Users/friedrichwilkegrosche/GitHub/MARMOT/code" # "/Users/sarno/Documents/GitHub/Pomelo/code" #"/root/code"
-     --data: "/Users/friedrichwilkegrosche/GitHub/MARMOT/raw" #"/root/data" #
+     --data_root: "/cvlabscratch/cvlab/home/engilber/dev/MARMOT/data" # "/Users/sarno/Documents/GitHub/Pomelo/data" #"/root/data"
+     --code_root: "/cvlabscratch/cvlab/home/engilber/dev/MARMOT/code" # "/Users/sarno/Documents/GitHub/Pomelo/code" #"/root/code"
+     --data: "/cvlabscratch/cvlab/home/engilber/dev/pomelo_test_data" #"/root/data" #
 
   --calibration:
    #   --focal_length: "507" # tag to be added to metadata
      --omni_tag: '360'     # tag to identify omnidirectional camera
-     --opensfm_repo: "/OpenSfM" #"/Users/grosche/Documents/GitHub/OpenSfM/"
+     --opensfm_repo: "/source/OpenSfM/" #"/Users/grosche/Documents/GitHub/OpenSfM/"
   
   --annotation:
     --num_train_sample: "400"

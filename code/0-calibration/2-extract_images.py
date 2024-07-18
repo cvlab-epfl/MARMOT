@@ -48,8 +48,8 @@ from utils.metadata_utils import get_cam_names
 from configs.arguments import get_config_dict
 from utils.io_utils import write_json
 
-omni_frame_ids = None #np.linspace(1200, 2700, 30, dtype=int)
-persp_frame_ids = [100]
+omni_frame_ids = np.linspace(1200, 2700, 30, dtype=int)
+persp_frame_ids = [100, 200, 300, 400]
 omni_frame_min = 1200
 omni_frame_max = 2700
 
@@ -89,21 +89,40 @@ rig_adjuster_config = [
         }
     ]
 
-def process_omni_frame(frame, camera:Camera, index, face_w, rig_adjuster_config):
+def process_omni_frame(frame, camera:Camera, index, face_w, rig_adjuster_config,
+        images_dir, 
+        views_list:list = ['forward', 'right', 'back', 'left', 'up', 'down'], 
+        quat_list:list = [
+                        [1, 0, 0, 0],
+                        [-1 / np.sqrt(2), 0, 1 / np.sqrt(2), 0],
+                        [0, 0, 1, 0],
+                        [1 / np.sqrt(2), 0, 1 / np.sqrt(2), 0],
+                        [1 / np.sqrt(2), 0, 0, 1 / np.sqrt(2)],
+                        [-1 / np.sqrt(2), 0, 0, 1 / np.sqrt(2)]
+                        ]):
+    
+    omni_folder = images_dir / camera.name
+    omni_folder.mkdir(parents=True, exist_ok=True)
+    file_path_omni =  omni_folder / f'{index}.jpg'
+
+    cv2.imwrite(str(file_path_omni), frame)
+    
     perspectives = py360convert.e2c(frame, face_w=face_w, cube_format='list')
     
     
     for j, image in enumerate(perspectives):
-        # if views_list[j] in ['back', 'up', 'down']:
+        # if views_list[j] in ['up', 'down']:
         #     continue
         cam_id = j + 1
         views_folder = images_dir / f'{camera.name}_view_{views_list[j]}'
         views_folder.mkdir(parents=True, exist_ok=True)
-        file_path =  views_folder / f'{index}.jpg' 
+        file_path =  views_folder / f'{index}.jpg'
+        if views_list[j] in ['right', 'back']:
+            image = np.fliplr(image)
+        elif views_list[j] in ['up']:
+            image = np.flipud(image)
+
         cv2.imwrite(str(file_path), image)
-        # metadata = pyexif.ExifEditor(file_path)
-        # metadata.setTag('Model', camera.name)
-        # metadata.setTag('Make', camera.name)
 
         config_entry = {
             "camera_id": cam_id,
@@ -114,6 +133,32 @@ def process_omni_frame(frame, camera:Camera, index, face_w, rig_adjuster_config)
         if config_entry not in rig_adjuster_config[0]["cameras"]:
             rig_adjuster_config[0]["cameras"].append(config_entry)
     return rig_adjuster_config
+
+# def process_omni_frame(frame, camera:Camera, index, face_w, rig_adjuster_config):
+#     perspectives = py360convert.e2c(frame, face_w=face_w, cube_format='list')
+    
+    
+#     for j, image in enumerate(perspectives):
+#         # if views_list[j] in ['back', 'up', 'down']:
+#         #     continue
+#         cam_id = j + 1
+#         views_folder = images_dir / f'{camera.name}_view_{views_list[j]}'
+#         views_folder.mkdir(parents=True, exist_ok=True)
+#         file_path =  views_folder / f'{index}.jpg' 
+#         cv2.imwrite(str(file_path), image)
+#         # metadata = pyexif.ExifEditor(file_path)
+#         # metadata.setTag('Model', camera.name)
+#         # metadata.setTag('Make', camera.name)
+
+#         config_entry = {
+#             "camera_id": cam_id,
+#             "image_prefix": f"{camera.name}_view_{views_list[j]}",
+#             "cam_from_rig_rotation": quat_list[j],
+#             "cam_from_rig_translation": [0, 0, 0]
+#         }
+#         if config_entry not in rig_adjuster_config[0]["cameras"]:
+#             rig_adjuster_config[0]["cameras"].append(config_entry)
+#     return rig_adjuster_config
     
 
 def process_perspective_frame(frame, camera:Camera, index):
@@ -171,7 +216,7 @@ def main():
                     cam_dict["height"] = face_w
                     for i, frame in enumerate(frames):
                         index = batch_frame_ids[i]
-                        futures.append(executor.submit(process_omni_frame, frame, camera, index, face_w, rig_adjuster_config))
+                        futures.append(executor.submit(process_omni_frame, frame, camera, index, face_w, rig_adjuster_config, images_dir))
 
                 for future in as_completed(futures):
                     pass
@@ -179,11 +224,12 @@ def main():
         else:
             frame_ids = np.linspace(first_frame, last_frame, 
                                     num_extract, dtype=int)
+
             if persp_frame_ids is not None:
                 frame_ids = persp_frame_ids
             frames = camera.extract(frame_ids)
             # K = camera.get_calib().K
-            # frames = camera.undistort(frames=frames)
+            frames = camera.undistort(frames=frames)
             height, width = frames[0].shape[:-1]
             # focal_length = (K[0][0]+K[1][1]) / (np.max([height, width])*2)
             proj_type ='perspective'

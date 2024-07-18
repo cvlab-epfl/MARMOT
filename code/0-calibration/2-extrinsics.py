@@ -107,6 +107,7 @@ def main():
             else:
                 frame_ids = np.linspace(first_frame, last_frame, 
                                         num_extract, dtype=int)
+
                 if persp_frame_ids is not None:
                     frame_ids = persp_frame_ids
                 frames = camera.extract(frame_ids)
@@ -153,14 +154,15 @@ def main():
         #     log.error("SfM pipeline failed.")
         #     return 1
 
-    # cams = get_cam_names(env_footage, omni_tag=omni_tag)
+    cams = get_cam_names(env_footage, omni_tag=omni_tag)
 
-    # for cam in cams:
-    #     camera = Camera(cam, newest=False)
-    #     camera.calib_from_reconstruction(opensfm_data / 'reconstruction.json')
-    #     if camera.is_calibrated():
-    #         log.info(f"Camera {cam} calibrated.")
-    #         camera.save_calibration()
+    for cam in cams:
+        camera = Camera(cam, newest=False)
+        camera.calib_from_reconstruction(opensfm_data / 'reconstruction.json')
+        if camera.is_calibrated():
+            log.info(f"Camera {cam} calibrated.")
+            camera.save_calibration()
+
     return 0
 
         
