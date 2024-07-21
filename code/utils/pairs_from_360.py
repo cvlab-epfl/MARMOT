@@ -8,10 +8,11 @@ from pathlib import Path
 from typing import Dict, List, Union, Optional
 import numpy as np
 
-from hloc import logger
 from hloc.utils.parsers import parse_image_lists, parse_retrieval
 from hloc.utils.io import list_h5_names
 from hloc import pairs_from_retrieval
+
+from utils.log_utils import log
 
 def main(
         output: Path,
@@ -74,7 +75,9 @@ def main(
 
         os.unlink(retrieval_pairs_tmp)
 
-    logger.info(f'Found {len(pairs)} pairs. {pairs}')
+    log.info(f'Found {len(pairs)} pairs.')
+    log.spam(f"Pairs: {pairs}")
+
     with open(output, 'w') as f:
         f.write('\n'.join(' '.join([i, j]) for i, j in pairs))
 

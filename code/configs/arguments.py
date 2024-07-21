@@ -41,7 +41,6 @@ parser_calib.add_argument("-focal", "--default_focal", dest="default_focal", hel
 parser_calib.add_argument("-uau", "--use_alpha_undistort", dest="use_alpha_undistort", default=False, action="store_true", help="When undistorting images, preserve edges by using alpha calibration value")
 parser_calib.add_argument("-rp", "--rectangle_padding", dest="rectangle_padding", help="Padding percentage of the bounding rectangle used to generate the groundplane projection, value larger than zero (0,100) will increase the space around the bounding rectangle included in the groundplane projection", type=float, default=0)
 
-
 # parser_calib
 
 ####### Annotation #######

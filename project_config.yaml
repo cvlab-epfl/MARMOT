@@ -1,9 +1,9 @@
 # Project config
 ---
   --main:
-     --data_root: "/mnt/f/Github/MARMOT/data" #"/Users/friedrichwilkegrosche/GitHub/MARMOT/data" # "/Users/grosche/Documents/GitHub/Pomelo/data" #"/root/data"
-     --code_root: "/mnt/f/Github/MARMOT/code" #"/Users/grosche/Documents/GitHub/MARMOT/code" #"/Users/friedrichwilkegrosche/GitHub/MARMOT/code" # "/Users/grosche/Documents/GitHub/Pomelo/code" #"/root/code"
-     --data: "/mnt/f/Github/MARMOT/data" #"/Users/grosche/Documents/GitHub/MARMOT/data" # #"/root/data" #
+     --data_root: "/cvlabscratch/cvlab/home/engilber/dev/MARMOT/data" # "/Users/sarno/Documents/GitHub/Pomelo/data" #"/root/data"
+     --code_root: "/cvlabscratch/cvlab/home/engilber/dev/MARMOT/code" # "/Users/sarno/Documents/GitHub/Pomelo/code" #"/root/code"
+     --data: "/cvlabscratch/cvlab/home/engilber/dev/pomelo_test_data" #"/root/data" #
      
 
   --calibration:

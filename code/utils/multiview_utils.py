@@ -425,7 +425,8 @@ class Camera(BaseCamera):
         if self.calibration.K is None:
             return False
         elif self.calibration.R is None:
-            return False
+            log.warning(f"Camera {self.name} extrinsics are missing")
+            return True
         elif self.calibration.ROI is None:
             return True
         else:
@@ -568,6 +569,7 @@ class Camera(BaseCamera):
         points = np.linalg.inv(self.calibration.K) @ points
 
         return points.T
+
     
     def get_position(self) -> np.ndarray:
         """
@@ -783,25 +785,30 @@ class Camera(BaseCamera):
         RT[:,2] = self.calibration.T.squeeze()
 
         # Scale the bounding box by the output image size
-        scale = max(output_img_size) / max(bounding_box[1])
+        # scale = max(output_img_size) / max(bounding_box[1])
+        
+        scale = min([output_img_size[0] / bounding_box[1][0], output_img_size[1] / bounding_box[1][1]])
         
         bounding_box = ((bounding_box[0][0]*scale, bounding_box[0][1]*scale), 
                         (bounding_box[1][0]*scale, bounding_box[1][1]*scale), 
                         bounding_box[2])
 
+        # TODO: Check but I think the following code is wrong. 
+        # The rotation to make the bounding box align with the image should be centered around the center of the bounding box.
+        # As is the rotation doesn't preserve the centering of the ouput
 
-        # if longest sides of output image and bounding box don't align, rotate the bounding box
-        if output_img_size[1] > output_img_size[0] and bounding_box[1][1] > bounding_box[1][0]:
-            print("Rotating bounding box counter clockwise 90 degrees")
-            bounding_box = ((bounding_box[0][1], bounding_box[0][0]), 
-                            (bounding_box[1][1], bounding_box[1][0]), 
-                            bounding_box[2] + 90)
+        # # if longest sides of output image and bounding box don't align, rotate the bounding box
+        # if output_img_size[1] > output_img_size[0] and bounding_box[1][1] > bounding_box[1][0]:
+        #     print("Rotating bounding box counter clockwise 90 degrees")
+        #     bounding_box = ((bounding_box[0][1], bounding_box[0][0]), 
+        #                     (bounding_box[1][1], bounding_box[1][0]), 
+        #                     bounding_box[2] + 90)
 
-        if output_img_size[0] > output_img_size[1] and bounding_box[1][0] > bounding_box[1][1]:
-            print("Rotating bounding box clockwise 90 degrees")
-            bounding_box = ((bounding_box[0][1], bounding_box[0][0]), 
-                            (bounding_box[1][1], bounding_box[1][0]), 
-                            bounding_box[2] - 90)
+        # if output_img_size[0] > output_img_size[1] and bounding_box[1][0] > bounding_box[1][1]:
+        #     print("Rotating bounding box clockwise 90 degrees")
+        #     bounding_box = ((bounding_box[0][1], bounding_box[0][0]), 
+        #                     (bounding_box[1][1], bounding_box[1][0]), 
+        #                     bounding_box[2] - 90)
 
 
         # Rotate by rotation around the z axis
@@ -810,21 +817,30 @@ class Camera(BaseCamera):
         # Compute the translation to center the output image bbox center with padding
         cx, cy = bounding_box[0][1], bounding_box[0][0]
 
-        if padding_percent != 0:
-            padding_x = int(output_img_size[1] / padding_percent / 100)
-            padding_y = int(output_img_size[0] / padding_percent / 100)
-        else:
-            padding_x = 0
-            padding_y = 0
-        tx = int((output_img_size[1]-1) / 2) + cx
-        ty = int((output_img_size[0]-1) / 2) + cy
+        # if padding_percent != 0:
+        #     padding_x = int(output_img_size[1] / padding_percent / 100)
+        #     padding_y = int(output_img_size[0] / padding_percent / 100)
+        # else:
+        #     padding_x = 0
+        #     padding_y = 0
+
+        padding_x = int(output_img_size[1] * padding_percent / 100)
+        padding_y = int(output_img_size[0] * padding_percent / 100)
+
+        tx = int((output_img_size[1]-1) / 2) - cx
+        ty = int((output_img_size[0]-1) / 2) - cy
 
         # Create Ki with padding
         Ki = np.eye(3)
-        Ki[0,0] = scale / (1 + padding_percent / 100)
-        Ki[1,1] = scale / (1 + padding_percent / 100)
-        Ki[0,2] = tx + padding_x
-        Ki[1,2] = ty + padding_y
+        # Ki[0,0] = scale / (1 + padding_percent / 100)
+        # Ki[1,1] = scale / (1 + padding_percent / 100)
+        Ki[0,0] = scale * (1 - padding_percent / 100)
+        Ki[1,1] = scale * (1 - padding_percent / 100)
+
+        # Ki[0,2] = tx + padding_x
+        # Ki[1,2] = ty + padding_y
+        Ki[0,2] = tx + padding_x / 2
+        Ki[1,2] = ty + padding_y / 2
 
         # Create conversion matrix from input_img_size to native size
         factorx = input_img_size[1] / (self.calibration.size[1])

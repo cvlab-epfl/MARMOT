@@ -41,6 +41,7 @@ def main():
     # make raw data directory
     if not raw_dir.is_dir():
         log.info("Creating raw data directory.")
+        print(f"Creating raw data directory at {raw_dir}")
         raw_dir.mkdir(parents=True, exist_ok=True)
 
     # ensure that environment footage is valid

@@ -55,9 +55,9 @@ if __name__ == '__main__':
      log.info(f"Generating training configuration file")
      root_dir = Path(conf_dict["main"]["data_root"]) 
      root_code = Path(conf_dict["main"]["code_root"])
-    
+
     #read default yaml file  
-     with open(root_code.parent / "data" / "2-training" / "train_config.yaml", 'r') as stream:
+     with open(root_code.parent / "train_config.yaml", 'r') as stream:
            train_conf_def = yaml.safe_load(stream)
 
      log.spam(f'train_conf_default: {dict_to_string(train_conf_def)}')
@@ -67,6 +67,8 @@ if __name__ == '__main__':
 
      log.spam(f'train_conf_ updated: {dict_to_string(train_conf_def)}')
 
+     new_config_path = root_dir / "2-training/train_config.yaml"
+     new_config_path.parent.mkdir(parents=True, exist_ok=True)
      #write new yaml file
      with open(root_dir / "2-training/train_config.yaml", 'w') as stream:
                yaml.dump(train_conf_def, stream)

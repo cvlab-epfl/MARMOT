@@ -33,16 +33,21 @@ if __name__ == '__main__':
     
     log.info(f"Extracting validation sequence of len {val_seq_length}")
     #Extract validation sequence from videosp
-    if val_seq_start == -1:
-        seq_frame_indices = list(range(val_seq_start, val_seq_start+val_seq_length))
+    if val_seq_length == 0:
+        log.info("Validation sequence length is 0, skipping validation sequence extraction")
+        seq_frame_indices = []
     else:
-        seq_frame_indices = sample_sequence(mvv, val_seq_length, sample_multiplier=10)
-
-    for cam in mvv:
-        frame_list = cam.extract(seq_frame_indices)
-        cam.save(root_dir / "val" / cam.name, frame_list)
-        save_video_mp4(frame_list, 
-                       str(root_dir / "visualisation" / f"{cam.name}_val"), save_framerate = 1)
+        if val_seq_start != -1:
+            seq_frame_indices = list(range(val_seq_start, val_seq_start+val_seq_length))
+        else:
+            seq_frame_indices = sample_sequence(mvv, val_seq_length, sample_multiplier=10)
+        
+        print(seq_frame_indices)
+        for cam in mvv:
+            frame_list = cam.extract(seq_frame_indices)
+            cam.save(root_dir / "val" / cam.name, frame_list)
+            save_video_mp4(frame_list, 
+                        str(root_dir / "visualisation" / f"{cam.name}_val"), save_framerate = 1)
 
 
     log.info(f"Extracting {nb_train_sample} training frames")

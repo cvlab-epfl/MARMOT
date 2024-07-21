@@ -3,8 +3,8 @@
   dataset:
     --metric_threshold : '5'
     --hm_size: 
-      - "120"
-      - "300"
+      - "160"
+      - "100"
     --hm_radius: '4'
     --crop_size:
       - "720"
