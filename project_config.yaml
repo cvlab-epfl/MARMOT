@@ -17,4 +17,5 @@
   --annotation:
     --num_train_sample: "400"
     --val_seq_length: "100"
+    -val_seq_start: "0"
 

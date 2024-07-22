@@ -183,7 +183,7 @@ class BaseCamera:
         return first_frame
     
     def _extract_frame(self, video_capture: cv2.VideoCapture, 
-                       frame_number: int, max_attempts: int = 50) -> np.ndarray:
+                       frame_number: int, max_attempts: int = 50, extrac_with_grab=False) -> np.ndarray:
         """Extracts a frame from a video capture object.
 
         Arguments:
@@ -214,26 +214,37 @@ class BaseCamera:
         
         # video_capture.set(cv2.CAP_PROP_POS_AVI_RATIO, frame_number / video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
 
-        curr_frame_number = video_capture.get(cv2.CAP_PROP_POS_FRAMES)
+        if extrac_with_grab:
+            curr_frame_number = video_capture.get(cv2.CAP_PROP_POS_FRAMES)
 
-        if curr_frame_number > frame_number or curr_frame_number < 0:
-            log.debug("Resetting video capture")
-            video_capture.set(cv2.CAP_PROP_POS_FRAMES, 1)
-            curr_frame_number = 1
+            if curr_frame_number > frame_number or curr_frame_number < 0:
+                log.debug("Resetting video capture")
+                video_capture.set(cv2.CAP_PROP_POS_FRAMES, 1)
+                curr_frame_number = 1
 
-        for i in range(int(frame_number - curr_frame_number)):
+            for i in range(int(frame_number - curr_frame_number)):
+                for attempt in range(max_attempts):
+                    ret = video_capture.grab()
+                    if ret:
+                        break
+                if not ret:
+                    log.warning(f"Failed to grab frame {i} ")
+
+            # assert video_capture.get(cv2.CAP_PROP_POS_FRAMES) == frame_number
+
+            ret, frame = video_capture.retrieve()
+            if ret:
+                return frame
+        else:
             for attempt in range(max_attempts):
-                ret = video_capture.grab()
+                video_capture.set(cv2.CAP_PROP_POS_FRAMES, frame_number-1)
+                ret, frame = video_capture.read()
                 if ret:
-                    break
-            if not ret:
-                log.warning(f"Failed to grab frame {i} ")
+                    break		        
 
-        # assert video_capture.get(cv2.CAP_PROP_POS_FRAMES) == frame_number
-
-        ret, frame = video_capture.retrieve()
-        if ret:
-            return frame
+            if ret:
+                return frame
+        
         
         log.warning(f"Failed to load frame {frame_number} "
                     f"after {max_attempts} attempts "
