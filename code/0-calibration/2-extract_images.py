@@ -178,6 +178,9 @@ def main():
                     pass
 
         else:
+            if not camera.is_calibrated():
+                log.warning(f"Camera {cam} intrinc calibration missing. Skipping.")
+                continue
             frame_ids = np.linspace(first_frame, last_frame, 
                                     num_extract, dtype=int)
             if persp_frame_ids is not None:
