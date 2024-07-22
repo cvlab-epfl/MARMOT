@@ -17,7 +17,7 @@ parser_train = parser.add_argument_group("training")
 parser_infer = parser.add_argument_group("inference")
 parser_track = parser.add_argument_group("tracking")
 
-parser_main.add_argument("-cfg", "--config_file", dest="config_file", help="Path to a YAML file containing of argument that will be used as new default value, if command line argument are specified they will override the value from the YAML file", type=str, default=BASEPATH + "/project_config.yaml")
+parser_main.add_argument("-cfg", "--config_file", dest="config_file", help="Path to a YAML file containing of argument that will be used as new default value, if command line arguments are specified they will override the value from the YAML file", type=str, default=BASEPATH + "/project_config.yaml")
 # parser.add_argument("-l", "--log_lvl", dest="log_lvl", default="debug", choices=["debug", "spam", "verbose", "info", "warning", "error"], help='Set level of logger to get more or less verbose output')
 # parser.add_argument("-dr", "--data_root", dest="data_root", help="Path to the data folder", type=str, default=None)
 # parser_main.add_argument("-cfg", "--config_file", dest="config_file", help="Path to a YAML file containing of argument that will be used as new default value, if command line argument are specified they will override the value from the YAML file", type=str, default="./project_config.yaml")
@@ -30,6 +30,9 @@ parser_main.add_argument("-sf", "--save_framerate", dest="save_framerate", help=
 
 ####### Calibration #######
 parser_calib.add_argument("-fi", "--force_intrinsics", dest="force_intrinsics", action="store_true", help="Force recalculation of intrinsics from footage",)
+parser_calib.add_argument("-omnistart", "--omni_start", dest="omni_start", help="First frame extracted from the omnidirectrional footage for reconstruction.")
+parser_calib.add_argument("-omniend", "--omni_end", dest="omni_end", help="Last frame extracted from the omnidirectrional footage for reconstruction.")
+parser_calib.add_argument("-omnistep", "--omni_step", dest="omni_step", help="Number of frames between extractions from the omnidirectrional footage for reconstruction.")
 parser_calib.add_argument("-fr", "--force_reconstruction", dest="force_reconstruction", action="store_true", help="Force OpenSfM reconstruction", default=False)
 parser_calib.add_argument("-osfmr", "--opensfm_repo", dest="opensfm_repo", help="Location of OpenSfM_Repo", type=str, default="/OpenSfM")
 parser_calib.add_argument("-omni", "--omni_tag", dest="omni_tag", help="Tag to identify omnidirectional camera", type=str, default="360")
@@ -37,7 +40,6 @@ parser_calib.add_argument("--focal_length", dest="focal_length", help="Default f
 parser_calib.add_argument("-focal", "--default_focal", dest="default_focal", help="Default normalised focal length for camera overrides in opensfm", type=float, default=0.45)
 parser_calib.add_argument("-uau", "--use_alpha_undistort", dest="use_alpha_undistort", default=False, action="store_true", help="When undistorting images, preserve edges by using alpha calibration value")
 parser_calib.add_argument("-rp", "--rectangle_padding", dest="rectangle_padding", help="Padding percentage of the bounding rectangle used to generate the groundplane projection, value larger than zero (0,100) will increase the space around the bounding rectangle included in the groundplane projection", type=float, default=0)
-
 
 # parser_calib
 
@@ -67,7 +69,7 @@ parser_track.add_argument("-mt", "--metric_threshold", dest="metric_threshold", 
 
 
 
-def get_config_dict():
+def get_config_dict(filepath = None):
     """
     Generate config dict from command line argument and config file if existing_conf_dict is not None, value are added to the existing dict if they are not already defined, 
     """
@@ -76,8 +78,13 @@ def get_config_dict():
     # args = parser.parse_args()
     args, unknown = parser.parse_known_args(sys.argv[1:])
 
-    if args.config_file is not None or "pomelo_cfg" in os.environ:
-        config_path = os.environ.get('pomelo_cfg') if "pomelo_cfg" in os.environ else args.config_file
+    if args.config_file is not None or "pomelo_cfg" in os.environ or filepath:
+        if filepath:
+            config_path = filepath
+        elif args.config_file:
+            config_path = args.config_file
+        else:
+            config_path = os.environ.get('pomelo_cfg')
 
         yaml_dict = read_yaml_file(config_path)
         arg_list = convert_yaml_dict_to_arg_list(yaml_dict)

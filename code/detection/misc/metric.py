@@ -332,7 +332,7 @@ def compute_moda(accumulator, nb_gt):
         if frame_id not in frame_stats:
             frame_stats[frame_id] = list()
         
-        frame_stats[frame_id].append(row[0])
+        frame_stats[frame_id].append(row.iloc[0])
 
     missandFP = 0
     total = 0

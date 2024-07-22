@@ -41,7 +41,56 @@ force_reextract = config.get('calibration', {}).get('force_intrinsics', False)
 
 frame_step = 2
 
-
+default_calib =  {
+    "K":[
+            [
+                659.77,
+                0.0,
+                653.80
+            ],
+            [
+                0.0,
+                624.16,
+                337.32
+            ],
+            [
+                0.0,
+                0.0,
+                1.0
+            ]
+    ],
+    "K_new":
+        [
+            [
+            659.77,
+            0.0,
+            653.80
+        ],
+        [
+            0.0,
+            624.16,
+            337.32
+        ],
+        [
+            0.0,
+            0.0,
+            1.0
+        ]
+    ],
+    "R":None,
+    "T":None,
+    "dist":[
+        -0.16026,
+        0.0262125,
+        -0.00224888,
+        -0.00259982,
+        0.0
+    ],
+    "view_id":1,
+    "ROI":None,
+    "bounding_box":None,
+    "size":None
+}
 def main():
     log.info(f"Arguments:")
     log.info("--------------------")
@@ -49,71 +98,78 @@ def main():
     log.info(f"Omni tag: {omni_tag}")
     log.info(f"Force reextract: {force_reextract}")
     log.info(f"Frame step: {frame_step}")
+    log.info(f"Default Calibration: {default_calib}")
 
     # set paths to folders
     calib_footage = data_root / 'raw_data' / 'calibration'
-    assert calib_footage.is_dir(), ("Checkerboard footage not found. "
-                                    "Please place checkerboard footage in the "
-                                    f"folder: {calib_footage}")
-
-    frames_dir = (data_root / '0-calibration' / 'frames')
-    frames_dir.mkdir(parents=True, exist_ok=True)
-
-    intrinsics_visu = (data_root / '0-calibration' 
-                       / 'visualisation' / 'intrinsics')
-    intrinsics_visu.mkdir(parents=True, exist_ok=True)
-
-    calib_cams = get_cam_names(calib_footage, omni_tag=omni_tag)
-    log.info(f"Found calibration footage for cameras: {calib_cams}")
-
     footage = data_root / 'raw_data' / 'footage'
+
     footage_cams = get_cam_names(footage, omni_tag=omni_tag)
     log.info(f"Found environment footage for cameras: {footage_cams}")
+    temp_intrinsics = default_calib
 
-    temp_intrinsics = None
+    if calib_footage.is_dir():
+        frames_dir = (data_root / '0-calibration' / 'frames')
+        frames_dir.mkdir(parents=True, exist_ok=True)
 
-    for cam in calib_cams:
-        log.info(f"Extracting frames from {cam}")
-        camera = Camera(cam, newest=False)
-        cam_dir = frames_dir / camera.name
-        if not cam_dir.is_dir():
-            log.info(f"Creating frames folder for {cam}")
-            cam_dir.mkdir(parents=True, exist_ok=True)
-            
-        if len(os.listdir(cam_dir)) == 0:
-            vid_dict = camera.index_videos()
+        intrinsics_visu = (data_root / '0-calibration' 
+                        / 'visualisation' / 'intrinsics')
+        intrinsics_visu.mkdir(parents=True, exist_ok=True)
 
-            frame_ids = [i for i in range(
-                list(vid_dict['calibration'].values())[0]['start'], 
-                list(vid_dict['calibration'].values())[0]['end'] - 1, 
-                frame_step)]
+        calib_cams = get_cam_names(calib_footage, omni_tag=omni_tag)
+        log.info(f"Found calibration footage for cameras: {calib_cams}")
 
-            frames = camera.extract(frame_ids, mode = 'calibration')
-            camera.save(cam_dir, frames = frames)
+    
+        
 
-        log.info(f"Computing intrinsics for camera {cam}")
-        cam_visu_dir = intrinsics_visu / camera.name
-        intrinsics = compute_intrinsics(cam_dir, cam_visu_dir, args)
+        for cam in calib_cams:
+            log.info(f"Extracting frames from {cam}")
+            camera = Camera(cam, newest=False)
+            cam_dir = frames_dir / camera.name
+            if not cam_dir.is_dir():
+                log.info(f"Creating frames folder for {cam}")
+                cam_dir.mkdir(parents=True, exist_ok=True)
+                
+            if len(os.listdir(cam_dir)) == 0:
+                vid_dict = camera.index_videos()
 
-        temp_intrinsics = intrinsics
-        calibration = Calibration(  
-            K = np.array(intrinsics['K']), 
-            K_new = np.array(intrinsics['K_new']),
-            dist = np.array(intrinsics['dist']), 
-            view_id = camera.name.split('m')[1],
-            size = camera.get_frame_size()
-            )
+                frame_ids = [i for i in range(
+                    list(vid_dict['calibration'].values())[0]['start'], 
+                    list(vid_dict['calibration'].values())[0]['end'] - 1, 
+                    frame_step)]
 
-        camera.save_calibration(calibration)
+                frames = camera.extract(frame_ids, mode = 'calibration')
+                camera.save(cam_dir, frames = frames)
 
-        if cam in footage_cams:
-            footage_cams.pop(footage_cams.index(cam))
-            log.info(f"Intrinsics for {camera.name} calculated.")
-            
+            log.info(f"Computing intrinsics for camera {cam}")
+            cam_visu_dir = intrinsics_visu / camera.name
+            intrinsics = compute_intrinsics(cam_dir, cam_visu_dir, args)
+
+            temp_intrinsics = intrinsics
+            calibration = Calibration(  
+                K = np.array(intrinsics['K']), 
+                K_new = np.array(intrinsics['K_new']),
+                dist = np.array(intrinsics['dist']), 
+                view_id = camera.name.split('m')[1],
+                size = camera.get_frame_size()
+                )
+
+            camera.save_calibration(calibration)
+
+            if cam in footage_cams:
+                footage_cams.pop(footage_cams.index(cam))
+                log.info(f"Intrinsics for {camera.name} calculated.")
+                
+    else:
+        log.info("Checkerboard footage not found. Please place any checkerboard"
+                f"footage in the folder: {calib_footage}, using default intrinsics"
+                "for now.")
+
     for cam in footage_cams:
         log.warning(f"""WARNING: {cam} is not in the calibration footage.
                 Please add it to the calibration footage folder.
-                For now we will revert to intrinsics from the last camera.""")
+                For now we will revert to intrinsics from the last camera or the
+                default intrinsics provided.""")
         
         camera = Camera(cam, newest=False)
 

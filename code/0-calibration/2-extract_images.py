@@ -39,49 +39,92 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 # Path to the code directory
 BASEPATH = os.path.dirname(os.path.abspath(__file__)).split('code')[-2]
 CODEPATH = os.path.join(BASEPATH, 'code')
-DATAPATH = os.path.join(BASEPATH, 'data')
+DATAPATH = Path(BASEPATH) / 'data'
 sys.path.append(CODEPATH)
-
+CODEPATH = Path(CODEPATH)
 from utils.log_utils import log
 from utils.multiview_utils import Camera
 from utils.metadata_utils import get_cam_names
 from configs.arguments import get_config_dict
 from utils.io_utils import write_json
 
-omni_frame_ids = np.linspace(1200, 2700, 30, dtype=int)
-persp_frame_ids = [100]
-omni_frame_min = 1200
-omni_frame_max = 2700
 
-
-try:
-    config = get_config_dict()
-except:
-    log.warning("No config file found. Using default values.")
-    config = {}
-
-data_root = Path(config.get('main', {}).get('data_root', DATAPATH))
-omni_tag = config.get('calibration', {}).get('omni_tag', '360')
-# set up paths
-env_footage = data_root / 'raw_data' / 'footage'
-# opensfm_data =  data_root / '0-calibration' / 'opensfm'
-images_dir = data_root / '0-calibration' / 'images'
-output_dir = data_root / '0-calibration' / 'outputs'
-
-REEXTRACT = True
-views_list = ['forward', 'right', 'back', 'left', 'up', 'down']
-def process_omni_frame(frame, camera:Camera, index, face_w):
+def process_omni_frame(frame, camera:Camera, index, face_w, rig_adjuster_config,
+        images_dir, 
+        views_list:list = ['forward', 'right', 'back', 'left', 'up', 'down'], 
+        quat_list:list = [
+                        [1, 0, 0, 0],
+                        [-1 / np.sqrt(2), 0, 1 / np.sqrt(2), 0],
+                        [0, 0, 1, 0],
+                        [1 / np.sqrt(2), 0, 1 / np.sqrt(2), 0],
+                        [1 / np.sqrt(2), 0, 0, 1 / np.sqrt(2)],
+                        [-1 / np.sqrt(2), 0, 0, 1 / np.sqrt(2)]
+                        ]):
+    
+    
     perspectives = py360convert.e2c(frame, face_w=face_w, cube_format='list')
+    
+    
     for j, image in enumerate(perspectives):
-        views_folder = images_dir / f'{camera.name}_{index}'
+        if views_list[j] in ['up', 'down']:
+            continue
+        cam_id = j + 1
+        views_folder = images_dir / f'{camera.name}_view_{views_list[j]}'
         views_folder.mkdir(parents=True, exist_ok=True)
-        file_path =  views_folder / f'view_{views_list[j]}.jpg' 
+        file_path =  views_folder / f'{index}.jpg'
+        if views_list[j] in ['right', 'back']:
+            image = np.fliplr(image)
+        elif views_list[j] in ['up']:
+            image = np.flipud(image)
         cv2.imwrite(str(file_path), image)
-        metadata = pyexif.ExifEditor(file_path)
-        metadata.setTag('Model', camera.name)
-        metadata.setTag('Make', camera.name)
+
+        config_entry = {
+            "camera_id": cam_id,
+            "image_prefix": f"{camera.name}_view_{views_list[j]}",
+            "cam_from_rig_rotation": quat_list[j],
+            "cam_from_rig_translation": [0, 0, 0]
+        }
+        if config_entry not in rig_adjuster_config[0]["cameras"]:
+            rig_adjuster_config[0]["cameras"].append(config_entry)
+    return rig_adjuster_config
+    
+
+def process_perspective_frame(frame, camera:Camera, index, 
+            images_dir
+            ):
+    
+    views_folder = images_dir / f'{camera.name}_view_forward'
+    views_folder.mkdir(parents=True, exist_ok=True)
+    file_path =  views_folder / f'{index}.jpg' 
+    cv2.imwrite(str(file_path), frame)
+
 
 def main():
+
+    REEXTRACT = True
+    try:
+        config = get_config_dict(filepath = CODEPATH / 'configs' / 'project_config.yaml' )
+    except:
+        log.warning(f"No config file found at {CODEPATH / 'configs' / 'project_config.yaml'}. Using default values.")
+        config = {}
+    print(config)
+    rig_adjuster_config = [
+            {
+                "ref_camera_id":1,
+                "cameras":
+                []
+            }
+        ]
+    
+    persp_frame_ids = [100]
+
+    # set up paths
+    env_footage = DATAPATH / 'raw_data' / 'footage'
+    images_dir = DATAPATH / '0-calibration' / 'images'
+    output_dir = DATAPATH / '0-calibration' / 'outputs'
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+
     log.info("Extracting Images...")
     
     if REEXTRACT:
@@ -92,25 +135,24 @@ def main():
     images_dir.mkdir(parents=True, exist_ok=True)
 
     cams = get_cam_names(env_footage)
-    camera_models_overrides_dict = {}
     log.info(f"Found {(cams)} in environment footage.")
 
     for cam in cams:
         camera = Camera(cam, newest=False)
+        print(camera.data_root)
         
         first_frame = int(skip_percent_frames*(camera.num_frames))
         last_frame = camera.num_frames - first_frame
 
         cam_dict = {}
         if camera.is_omni:
-            # num_extract_omni = (last_frame - first_frame) // 60
-            frame_ids = np.linspace(first_frame, last_frame, 
-                                    num_extract_omni, dtype=int)
-            if omni_frame_ids is not None:
-                frame_ids = omni_frame_ids
-            elif omni_frame_min is not None and omni_frame_max is not None:
-                frame_ids = np.linspace(omni_frame_min, omni_frame_max, 
-                                        num_extract_omni, dtype=int)
+            omni_start = int(config.get('calibration', {}).get('omni_start', first_frame))
+            omni_end = int(config.get('calibration', {}).get('omni_end', last_frame))
+            omni_step = int(config.get('calibration', {}).get('omni_step', 30))
+
+            frame_ids = np.linspace(omni_start, omni_end, 
+                                    (omni_end - omni_start) // omni_step, dtype=int)
+            
             all_frame_ids = frame_ids
             batch_size = 10
             with ThreadPoolExecutor() as executor:
@@ -127,37 +169,29 @@ def main():
                     cam_dict["height"] = face_w
                     for i, frame in enumerate(frames):
                         index = batch_frame_ids[i]
-                        futures.append(executor.submit(process_omni_frame, frame, camera, index, face_w))
+                        futures.append(executor.submit(process_omni_frame, frame, camera, index, face_w, rig_adjuster_config, images_dir))
 
                 for future in as_completed(futures):
                     pass
 
         else:
+            if not camera.is_calibrated():
+                log.warning(f"Camera {cam} intrinc calibration missing. Skipping.")
+                continue
             frame_ids = np.linspace(first_frame, last_frame, 
                                     num_extract, dtype=int)
             if persp_frame_ids is not None:
                 frame_ids = persp_frame_ids
             frames = camera.extract(frame_ids)
-            # K = camera.get_calib().K
-            # frames = camera.undistort(frames=frames)
-            height, width = frames[0].shape[:-1]
-            # focal_length = (K[0][0]+K[1][1]) / (np.max([height, width])*2)
-            proj_type ='perspective'
-            # cam_dict["projection_type"] = proj_type
-            # cam_dict["focal"] = focal_length
+            frames = camera.undistort(frames=frames)
 
             for i, frame in tqdm(enumerate(frames), desc=f"Extracting {cam} frames"):
                 index = frame_ids[i]
-                file_path =  images_dir / f'{camera.name}_{index}.jpg'              
-                cv2.imwrite(str(file_path), frame)
-                metadata = pyexif.ExifEditor(file_path)
-                metadata.setTag('Model', camera.name)
-                metadata.setTag('Make', camera.name)
+                process_perspective_frame(frame, camera, index, images_dir)
 
-            cam_dict["width"] = width
-            cam_dict["height"] = height
-            cam_key = f"v2 {cam}  {width} {height} perspective 0.0"
-            camera_models_overrides_dict[cam_key] = cam_dict
+
+    # save rig_adjuster_config
+    write_json(CODEPATH / "configs" / "rig_config.json", rig_adjuster_config)
 
 if __name__ == "__main__":
     main()

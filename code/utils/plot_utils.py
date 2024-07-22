@@ -166,7 +166,7 @@ def plot_3d_reconstruction(ax:Axes3D, reconstruction:dict, mvvids:MultiviewVids,
 
 
 def first_frame_selector(cameras:List[Camera], frame_ids:List[int],
-                         base_frames:dict, json_path:str) -> None:
+                         base_frames:dict, json_path:str, save=False) -> None:
     """
     Creates a widget to select the first frame of the video.
 
@@ -232,8 +232,9 @@ def first_frame_selector(cameras:List[Camera], frame_ids:List[int],
         starting_frames[cameras[0].name] = int(frame_ids[img1])
         starting_frames[cam] = int(frame_ids[img2])
         
-        # save the first frames dictionary
-        write_json(json_path, starting_frames)
+        if save:
+            # save the first frames dictionary
+            write_json(json_path, starting_frames)
         plt.show()
 
 

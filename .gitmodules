@@ -8,3 +8,6 @@
 [submodule "code/0-calibration/hloc"]
 	path = code/0-calibration/hloc
 	url = https://github.com/cvg/Hierarchical-Localization.git
+[submodule "code/0-calibration/COLMAP"]
+	path = code/0-calibration/COLMAP
+	url = https://github.com/colmap/colmap.git

@@ -9,8 +9,8 @@ Further information can be found at: https://github.com/wgrosche/MultiviewCamera
 ### Output
 
 - `data/0-calibration`
-- `data/0-calibration/calibs/camname1_new.json`
-- `data/0-calibration/calibs/camname2_new.json`
+- `data/0-calibration/calibs/camname1.json`
+- `data/0-calibration/calibs/camname2.json`
 
 
 
@@ -54,31 +54,48 @@ The monotonicity plot should show green lines, especially towards the centre of 
 <img src="../images/monotonicity.jpg" alt="Monotonicity plot with green depicting areas of monotonicity and red depicting non-monotonic areas." width="60%"/>
 </p>
 
+### Skipping the intrinsics step
+If you have already calculated the intrinsics and would like to skip this step, you can place the intrinsics in 'data/0-calibration/calibs'.
 
-## 2-Extrinsics
-Undistorts environment footage and places images in 'data/0-calibration/opensfm/images' for the opensfm pipeline.
-Runs the OpenSfM pipeline to calculate the extrinsics. 
-To execute run: `python3 2-extrinsics.py`
+Example intrisic file:
 
-Places calculated extrinsics in 'data/0-calibration/calibs'.
-Reconstruction is placed in 'data/0-calibration/visualisation/reconstruction.json'.
+Note that the calib file can also be use to select which camera to process. if you want to skip a camera, simply remove the corresponding calib file.
 
-## 3-Reconstruction Viewer
-Launches the opensfm reconstruction viewer with the generated dataset. This should be used for verification purposes.
-Some keypoints may exist outside of the scene.
-`bash 3-reconstruction_viewer.sh`
 
-An example reconstruction can be found at 'images/reconstruction.json'.
+## 2-Extract Images
+Undistorts environment footage and places images in 'data/0-calibration/images'.
 
-A visualisation in the reconstruction viewer should look like the following:
+To execute run: `python3 2-extract_images.py`
 
-<p align="center">
-<img src="../images/reconstruction.gif" alt="Example reconstruction visualisation." width="60%"/>
-</p>
+To speed up the reconstruction it is advised to specify which frame of the omnidirectional camera should be used. You can specify that in the 'project_config.yaml' file or in the command line argument with the arguments   --omni_start, --omni_end and --omni_step.
 
-To double-check the reconstruction it is recommended to use MeshLab to visualise 'undistorted/depthmaps/merged.ply'.
+## 3-4 Annotate ROI and Check time alignement
+Launches an annotation tool to define region of interest and finetune temporal alignement between videos.
 
-## 4-Annotation
+To execute run: `sh 3-annotation_tool.sh`
+
+Once started ctrl+click on the link to open the annotation tool in a web browser. From there you can open the notebook '4-select_roi.ipynb' and follow the instructions to annotate the region of interest and check the temporal alignment between the videos.
+
+
+## 5-Reconstruct Scene
+Launches the reconstruction pipeline, first reconstruct the scene from the omnidirectional frames. Then it will add the static camera to the reconstruction.
+
+to launch the reconstruction run: `python 5-reconstruct_scene.py`
+
+Outputs:
+- `data/0-calibration/outputs/360-reconstruction.ply` Point cloud of the scene. 
+- `data/0-calibration/outputs/360-reconstruction_w_static.html` Visualization of camera positions and the ground plane.
+
+
+## 6-Alignement Validation
+Go back to the annotation tool and open the notebook `6-alignement_validation.ipynb` to check the alignment of the static camera with the omnidirectional camera.
+
+- Visualize the groundplane and adjust output_img_size aspect ratio to maximize the space taken by the region of interest.
+- Verify the groundplane height by selecting matching ground points across views. Their corresponding triangulated point should lie on the gorund and have a z-coordinate of 0. If not the groundplane height is adjusted in the notebook. 
+
+You can restart the notebook to verify if the adjustement was successful. On the groundplane reprojection the reprojected point should be onverlapping.
+
+<!-- ## 4-Annotation
 Launches an annotation tool to calibrate the ground plane. 
 A histogram showing the distribution of points by their z-coordinate is plotted. 
 The lowest peak is expected to correspond with the ground plane.
@@ -126,7 +143,7 @@ Third we display a histogram of all z-values. The ground plane z-value is shown 
 
 <p align="center">
 <img src="../images/full_z_histogram.jpg" alt="All z values" width="60%"/>
-</p>
+</p> -->
 
 ### Example ground plane projection:
 Finally, verify that the calibration and ground plane projection are correct. The ground plane projection should show the ground plane for all the cameras. Points on the ground should be aligned between views and it should be centered on the region of interest selected earlier.

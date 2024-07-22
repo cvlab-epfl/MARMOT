@@ -9,8 +9,12 @@
    #   --focal_length: "507" # tag to be added to metadata
      --omni_tag: '360'     # tag to identify omnidirectional camera
      --opensfm_repo: "/OpenSfM" #"/Users/grosche/Documents/GitHub/OpenSfM/"
+     --omni_start: "1200"
+     --omni_end: "2700"
+     --omni_step: "30"
   
   --annotation:
     --num_train_sample: "400"
     --val_seq_length: "100"
+    -val_seq_start: "0"
 

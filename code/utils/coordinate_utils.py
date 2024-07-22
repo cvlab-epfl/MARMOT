@@ -131,3 +131,47 @@ def update_reconstruction(reconstruction, rotation:R=R.identity(),
     return new_reconstruction
 
 
+def triangulate_point(points_2d, multi_calib):
+    #Need at least point of view
+
+    homogenous = np.hstack([np.array(points_2d), np.ones((len(points_2d), 1))])
+    #compute camera position for each view
+    camera_positions = [-calib.R.T @ calib.T for calib in multi_calib]
+    
+    #Compute 3D direction from camera toward point
+    point_directions = [-calib.R.T @ np.linalg.inv(calib.K) @ point for point, calib in zip(homogenous, multi_calib)]
+    
+    point_3d = nearest_intersection(np.array(camera_positions), np.array(point_directions))
+    
+    return point_3d
+
+
+def nearest_intersection(points, dirs):
+    """
+    :param points: (N, 3) array of points on the lines
+    :param dirs: (N, 3) array of unit direction vectors
+    :returns: (3,) array of intersection point
+    
+    from https://stackoverflow.com/questions/52088966/nearest-intersection-point-to-many-lines-in-python
+    """
+    #normalized direction
+    dirs = dirs / np.linalg.norm(dirs, axis=1, keepdims=True)
+    dirs_mat = dirs[:, :, np.newaxis] @ dirs[:, np.newaxis, :]
+    points_mat = points[:, :, np.newaxis]
+    I = np.eye(3)
+    return np.linalg.lstsq(
+        (I - dirs_mat).sum(axis=0),
+        ((I - dirs_mat) @ points_mat).sum(axis=0),
+        rcond=None)[0]
+
+
+def project_points(points, homography):
+
+    poing_hom = np.ones((points.shape[0], points.shape[1] + 1))
+    poing_hom[:, :2] = points
+    poing_hom = poing_hom.T
+
+    projected_points = homography @ poing_hom
+    projected_points = (projected_points[:-1] / projected_points[-1]).T
+
+    return  projected_points
